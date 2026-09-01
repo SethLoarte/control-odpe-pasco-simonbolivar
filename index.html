@@ -13,12 +13,24 @@
             --gris-fondo: #f4f6f9; --blanco: #ffffff; --texto-oscuro: #333333; --texto-claro: #666666;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--gris-fondo); color: var(--texto-oscuro); min-height: 100vh; overflow-x: hidden; }
+        
+        /* Solución Móvil: Fondo adaptativo sin "fixed" para evitar saltos al hacer scroll */
+        body.login-bg { 
+            background-color: var(--gris-fondo);
+            background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); 
+            background-size: cover; 
+            background-position: center top; 
+            background-repeat: no-repeat;
+            background-attachment: scroll; 
+        }
+
         .hidden { display: none !important; }
         .pdf-offscreen { position: absolute; left: -9999px; top: 0; }
 
         /* --- VISTA INICIO --- */
-        #login-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); background-size: cover; background-attachment: fixed; }
+        #login-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         .login-card { background: var(--blanco); padding: 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); width: min(100%, 420px); text-align: center; }
         .login-card img { max-width: 80%; max-height: 60px; margin-bottom: 15px; }
         .login-card h2 { color: var(--azul-onpe); font-size: 20px; margin-bottom: 5px; }
@@ -42,6 +54,13 @@
         .circulo-valor { position: relative; font-size: 24px; font-weight: bold; color: var(--texto-oscuro); }
         .btn-pdf { background-color: var(--rojo-onpe); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-top: 10px; }
 
+        /* --- ACORDEONES --- */
+        .btn-acordeon { width: 100%; text-align: left; background: var(--blanco); border: 1px solid #ddd; padding: 15px; font-size: 16px; font-weight: bold; color: var(--azul-onpe); cursor: pointer; border-radius: 8px; margin-bottom: 8px; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 20px; }
+        .btn-acordeon.ie-btn { background: #e3f2fd; border-left: 5px solid var(--celeste-onpe); margin-left: 10px; width: calc(100% - 10px); }
+        .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; }
+        .acordeon-contenido { margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease; }
+        
         /* --- TARJETAS DE MIEMBROS --- */
         .onpe-dashboard { margin-bottom: 20px; }
         .top-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 15px; }
@@ -57,13 +76,11 @@
         .form-area select, .form-area input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
         
-        /* Inputs exclusivos de administradores */
         .admin-input { border: 1px dashed var(--celeste-onpe) !important; background: #f0f7ff !important; font-size: 13px !important; padding: 6px !important; }
     </style>
 </head>
-<body>
+<body class="login-bg">
 
-    <!-- INICIO DE SESIÓN -->
     <div id="login-view">
         <div class="login-card">
             <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE">
@@ -77,7 +94,6 @@
         </div>
     </div>
 
-    <!-- PANEL PRINCIPAL (Usado por CM y Admin) -->
     <div id="dashboard-view" class="hidden">
         <div class="navbar">
             <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE">
@@ -85,7 +101,6 @@
         </div>
         
         <div class="dashboard-container">
-            <!-- GRÁFICOS (Solo visibles para administradores) -->
             <div id="admin-graficos" class="hidden">
                 <h2 style="color: var(--azul-onpe); margin-bottom: 15px;">Dashboard Maestro en Tiempo Real</h2>
                 <div class="graficos-container">
@@ -109,20 +124,16 @@
                     </div>
 
                 </div>
-                <h3 style="color: var(--azul-onpe); margin: 30px 0 15px 0;">Listado de tu sector</h3>
             </div>
 
-            <!-- TARJETAS DE RESULTADOS -->
             <div id="contenedor-resultados"></div>
         </div>
     </div>
 
-    <!-- PLANTILLA OCULTA PARA EL PDF -->
     <div class="pdf-offscreen">
         <div id="reporte-pdf" style="position: relative; width: 1122px; height: 793px; background-image: url('metas.jpg'); background-size: contain; background-repeat: no-repeat; font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #333;">
             <div id="pdf-distrito" style="position: absolute; top: 320px; left: 180px;"></div>
             <div id="pdf-fecha" style="position: absolute; top: 320px; left: 850px;"></div>
-            
             <div id="pdf-total-mm" style="position: absolute; top: 580px; left: 350px; text-align: center; width: 80px;"></div>
             <div id="pdf-meta-mm" style="position: absolute; top: 580px; left: 470px; text-align: center; width: 80px;"></div>
             <div id="pdf-avance-porcentaje-mm" style="position: absolute; top: 580px; left: 690px; text-align: center; width: 100px;"></div>
@@ -131,7 +142,6 @@
     </div>
 
     <script>
-        // Enlaces integrados según iteraciones previas
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHpxLnBr2_P1IYZ1aFxhGD5wUWdEZUQviUrTRM27BS5aUYfUSu5Y7pZl0fRXWxrcSO3A/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShFcVD-MAHCeuCCteYy-mrnAU7VT9XWMQitmvFt_ZW8F2qssKpCI7upzfr_pJ2hoBZk-5gH4U9BaF-/pub?gid=1997588352&single=true&output=csv';
         const DNI_SETH = '71036931'; 
@@ -222,7 +232,8 @@
             try {
                 const response = await fetch(CSV_URL);
                 const text = await response.text();
-                baseDeDatos = text.split('\n');
+                baseDeDatos = text.split('
+');
 
                 if (valor === DNI_SETH) { 
                     usuarioActual = 'SETH'; 
@@ -263,42 +274,90 @@
             }
         }
 
-        // 4. VISTA PARA ADMINISTRADORES (Con Ordenamiento Lógico por Mesa)
+        // 4. VISTA ADMINISTRADOR: ACORDEONES ANIDADOS Y CARGA DIFERIDA
         function prepararPanelAdmin() {
-            let filasFiltradas = [];
+            let datosAgrupados = {};
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
                 if(col.length >= 8) {
-                    const institucion = col[7] ? col[7].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
-                    if (usuarioActual === 'SETH' && institucion.includes("SAN ANDRES")) {
-                        filasFiltradas.push(fila);
-                    } else if (usuarioActual === 'GOYITA' && !institucion.includes("SAN ANDRES")) {
-                        filasFiltradas.push(fila);
+                    let ieOriginal = col[7] ? col[7].trim() : 'SIN LOCAL';
+                    let institucionStr = ieOriginal.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+                    let mesa = col[0] ? col[0].trim() : '000000';
+                    
+                    let perteneceSeth = institucionStr.includes("SAN ANDRES");
+                    let perteneceGoyita = !institucionStr.includes("SAN ANDRES");
+
+                    if ((usuarioActual === 'SETH' && perteneceSeth) || (usuarioActual === 'GOYITA' && perteneceGoyita)) {
+                        if(!datosAgrupados[ieOriginal]) datosAgrupados[ieOriginal] = {};
+                        if(!datosAgrupados[ieOriginal][mesa]) datosAgrupados[ieOriginal][mesa] = [];
+                        datosAgrupados[ieOriginal][mesa].push(fila);
                     }
                 }
             });
 
-            // Ordenamiento ascendente por la Columna 0 (N° de Mesa)
-            filasFiltradas.sort((a, b) => {
-                let mesaA = a.split(',')[0].trim();
-                let mesaB = b.split(',')[0].trim();
-                return mesaA.localeCompare(mesaB);
-            });
+            // Construir HTML de los botones de acordeón
+            let htmlAcordeon = `
+                <button class="btn-acordeon main-btn" onclick="toggleAcordeon('panel-datos-global')">📁 VER DATOS Y PADRÓN</button>
+                <div id="panel-datos-global" class="acordeon-contenido hidden">
+            `;
 
-            let htmlTarjetas = '';
-            filasFiltradas.forEach(fila => {
-                htmlTarjetas += generarTarjetaHTML(fila, true);
+            let ies = Object.keys(datosAgrupados).sort();
+            ies.forEach(ie => {
+                let idIE = 'ie_' + ie.replace(/[^a-zA-Z0-9]/g, '');
+                htmlAcordeon += `
+                    <button class="btn-acordeon ie-btn" onclick="toggleAcordeon('${idIE}')">🏫 ${ie}</button>
+                    <div id="${idIE}" class="acordeon-contenido hidden">
+                `;
+                
+                let mesas = Object.keys(datosAgrupados[ie]).sort();
+                mesas.forEach(mesa => {
+                    let idMesa = idIE + '_mesa_' + mesa;
+                    htmlAcordeon += `
+                        <button class="btn-acordeon mesa-btn" onclick="toggleAcordeon('${idMesa}', true, '${ie}', '${mesa}')">🗳️ Mesa N° ${mesa}</button>
+                        <div id="${idMesa}" class="acordeon-contenido hidden" style="padding-top:10px;"></div>
+                    `;
+                });
+                htmlAcordeon += `</div>`;
             });
+            htmlAcordeon += `</div>`;
 
-            document.getElementById('contenedor-resultados').innerHTML = htmlTarjetas;
+            document.getElementById('contenedor-resultados').innerHTML = htmlAcordeon;
             document.getElementById('admin-graficos').classList.remove('hidden');
-            
             document.getElementById('btn-pdf-seth').style.display = (usuarioActual === 'SETH') ? 'block' : 'none';
             document.getElementById('btn-pdf-goyita').style.display = (usuarioActual === 'GOYITA') ? 'block' : 'none';
 
             actualizarGraficosCirculares();
             cambiarPantalla();
+        }
+
+        // Lógica de Despliegue y Carga Perezosa (Lazy Rendering)
+        function toggleAcordeon(id, esMesa = false, ieBuscada = '', mesaBuscada = '') {
+            let panel = document.getElementById(id);
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                // Si es nivel mesa y está vacío, inyectamos las tarjetas en este exacto momento
+                if (esMesa && panel.innerHTML.trim() === "") {
+                    panel.innerHTML = renderizarTarjetasLazy(ieBuscada, mesaBuscada);
+                }
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+
+        function renderizarTarjetasLazy(ieBuscada, mesaBuscada) {
+            let html = '';
+            baseDeDatos.forEach(fila => {
+                const col = fila.split(',');
+                if(col.length >= 8) {
+                    let ie = col[7] ? col[7].trim() : 'SIN LOCAL';
+                    let mesa = col[0] ? col[0].trim() : '000000';
+                    if (ie === ieBuscada && mesa === mesaBuscada) {
+                        html += generarTarjetaHTML(fila, true);
+                    }
+                }
+            });
+            return html;
         }
 
         // 5. CÁLCULO Y ANIMACIÓN REACTIVA
@@ -309,7 +368,7 @@
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
                 if(col.length >= 8) {
-                    const institucion = col[7] ? col[7].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+                    const institucion = col[7] ? col[7].toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "") : '';
                     const estaCapacitado = (col[8] && col[8].trim() !== "" && col[8].trim() !== "No Capacitado");
                     
                     if (institucion.includes("SAN ANDRES")) {
@@ -401,7 +460,9 @@
             html2pdf().set(opciones).from(elemento).save();
         }
 
+        // Control de Fondos Móviles
         function cambiarPantalla() {
+            document.body.classList.remove('login-bg'); 
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
             document.getElementById('inputBusqueda').value = '';
@@ -409,6 +470,7 @@
         }
 
         function cerrarSesion() {
+            document.body.classList.add('login-bg'); 
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
             usuarioActual = ''; baseDeDatos = [];
