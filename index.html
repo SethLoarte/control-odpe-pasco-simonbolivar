@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta ONPE - Simón Bolívar</title>
+    <style>
+        :root {
+            --azul-onpe: #003366;
+            --rojo-onpe: #e30613;
+            --gris-fondo: #f4f6f9;
+            --blanco: #ffffff;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background-color: var(--gris-fondo); color: #333; }
+        .hidden { display: none !important; }
+        
+        /* --- VISTA INICIO --- */
+        #login-view { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; 
+            background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); background-size: cover; background-position: center;
+        }
+        .login-card { background: var(--blanco); padding: 40px 30px; border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); max-width: 400px; width: 100%; text-align: center; }
+        .login-card h2 { color: var(--azul-onpe); font-size: 20px; margin-bottom: 5px; }
+        .login-card h3 { color: var(--rojo-onpe); font-size: 16px; margin-top: 0; margin-bottom: 25px; }
+        .input-group input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; text-align: center; }
+        .btn-consultar { width: 100%; background-color: #757575; color: var(--blanco); border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        
+        /* --- VISTA RESULTADOS --- */
+        .navbar { background: var(--blanco); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn-salir { color: var(--azul-onpe); background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .dashboard-container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        
+        /* Tarjeta Dinámica de Miembro */
+        .member-card { background: var(--blanco); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 5px solid var(--azul-onpe); }
+        .member-name { color: var(--azul-onpe); font-size: 18px; margin: 0 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 15px; }
+        .data-grid div { background: #f9f9f9; padding: 8px; border-radius: 4px; }
+        .full-width { grid-column: span 2; }
+        
+        .form-section { background: #fdfdfd; padding: 15px; border-radius: 5px; border-left: 4px solid var(--rojo-onpe); border: 1px solid #eee; }
+        .form-section select, .form-section input { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div id="login-view">
+        <div class="login-card">
+            <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE Logo" style="height: 60px; margin-bottom: 15px;">
+            <h2>Elecciones Regionales</h2>
+            <h3>Distrito Simón Bolívar</h3>
+            
+            <div class="input-group">
+                <input type="number" id="inputBusqueda" placeholder="DNI (8) o N° Mesa (6)" onkeypress="if(event.key === 'Enter') consultar()">
+            </div>
+            <button class="btn-consultar" onclick="consultar()" id="btnConsultarPrincipal">CONSULTAR</button>
+            <p id="mensaje-login" style="font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
+        </div>
+    </div>
+
+    <div id="dashboard-view" class="hidden">
+        <div class="navbar">
+            <img src="URL_IMAGEN_LOGO_PEQUENO" alt="ONPE" style="height: 40px;">
+            <button class="btn-salir" onclick="cerrarSesion()">Salir ➔</button>
+        </div>
+        <div class="dashboard-container" id="contenedor-resultados">
+            <!-- Las tarjetas se inyectarán aquí mediante JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHpxLnBr2_P1IYZ1aFxhGD5wUWdEZUQviUrTRM27BS5aUYfUSu5Y7pZl0fRXWxrcSO3A/exec';
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/1Y7NB0nJVeBaflH0UMhkCUctA6CtHFtnp7K7OZW4k-mg/edit?usp=sharing';
+
+        async function consultar() {
+            const valor = document.getElementById('inputBusqueda').value.trim();
+            const msj = document.getElementById('mensaje-login');
+            const btn = document.getElementById('btnConsultarPrincipal');
+            
+            if(valor.length !== 8 && valor.length !== 6) {
+                msj.style.color = 'red';
+                msj.innerText = "Ingrese un DNI (8 dígitos) o Mesa (6 dígitos).";
+                return;
+            }
+
+            const esDni = valor.length === 8;
+            msj.style.color = '#333';
+            msj.innerText = 'Consultando padrón...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(CSV_URL);
+                const text = await response.text();
+                const filas = text.split('\n');
+                
+                let htmlTarjetas = '';
+                let encontrados = 0;
+
+                for(let i = 1; i < filas.length; i++) {
+                    const col = filas[i].split(',');
+                    if(col.length > 8) {
+                        const mesaStr = col[0].trim();
+                        const dniStr = col[1].trim();
+                        
+                        // Lógica de coincidencia: Si ingresó DNI busca en col[1], si ingresó Mesa busca en col[0]
+                        if ((esDni && dniStr === valor) || (!esDni && mesaStr === valor)) {
+                            encontrados++;
+                            
+                            htmlTarjetas += `
+                            <div class="member-card">
+                                <h3 class="member-name">👤 ${col[2]} ${col[3]}</h3>
+                                <div class="data-grid">
+                                    <div><strong>DNI:</strong><br>${col[1]}</div>
+                                    <div><strong>MESA:</strong><br>${col[0]}</div>
+                                    <div><strong>Cargo:</strong><br>${col[4]}</div>
+                                    <div><strong>Celular:</strong><br>${col[5] || '-'}</div>
+                                    <div class="full-width"><strong>Domicilio:</strong><br>${col[6] || '-'}</div>
+                                    <div class="full-width"><strong>Local (I.E.):</strong><br>${col[7]}</div>
+                                    <div><strong>Capacitación Actual:</strong><br><span style="color:var(--rojo-onpe); font-weight:bold;">${col[8] || 'Sin registrar'}</span></div>
+                                    <div><strong>Obs. Actuales:</strong><br>${col[9] || 'Ninguna'}</div>
+                                </div>
+
+                                <div class="form-section">
+                                    <label style="font-size: 13px; font-weight: bold;">Actualizar Capacitación:</label>
+                                    <select id="cap_${col[1]}">
+                                        <option value="">Seleccione una opción...</option>
+                                        <option value="1ra Jornada">1ra Jornada</option>
+                                        <option value="2da Jornada">2da Jornada</option>
+                                        <option value="Personalizada - Local">Personalizada - Local</option>
+                                        <option value="Personalizada - Domicilio">Personalizada - Domicilio</option>
+                                        <option value="Virtual">Virtual</option>
+                                        <option value="No Capacitado">No Capacitado</option>
+                                    </select>
+
+                                    <label style="font-size: 13px; font-weight: bold;">Agregar Observación:</label>
+                                    <input type="text" id="obs_${col[1]}" placeholder="Ej: Viajó, número incorrecto...">
+
+                                    <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar a este miembro</button>
+                                    <p id="msg_${col[1]}" style="text-align:center; font-size:13px; font-weight:bold; margin-top:10px;"></p>
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                }
+                
+                if(encontrados > 0) {
+                    document.getElementById('contenedor-resultados').innerHTML = htmlTarjetas;
+                    document.getElementById('login-view').classList.add('hidden');
+                    document.getElementById('dashboard-view').classList.remove('hidden');
+                    document.getElementById('inputBusqueda').value = '';
+                    msj.innerText = '';
+                } else {
+                    msj.style.color = 'red';
+                    msj.innerText = "No se encontraron resultados.";
+                }
+            } catch(e) {
+                msj.style.color = 'red';
+                msj.innerText = "Error conectando con la base de datos.";
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function guardar(dniTarget) {
+            const cap = document.getElementById('cap_' + dniTarget).value;
+            const obs = document.getElementById('obs_' + dniTarget).value;
+            const msj = document.getElementById('msg_' + dniTarget);
+            const btn = document.getElementById('btn_' + dniTarget);
+            
+            msj.style.color = 'var(--azul-onpe)';
+            msj.innerText = 'Guardando...';
+            btn.disabled = true;
+
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(cap)}&obs=${encodeURIComponent(obs)}`;
+
+            fetch(urlEnvio, { mode: 'no-cors' })
+            .then(() => {
+                msj.style.color = '#28a745';
+                msj.innerText = '¡Actualizado con éxito!';
+            }).catch(() => {
+                msj.style.color = 'red';
+                msj.innerText = 'Error al guardar.';
+            }).finally(() => {
+                btn.disabled = false;
+                setTimeout(() => { msj.innerText = ''; }, 3000);
+            });
+        }
+
+        function cerrarSesion() {
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('contenedor-resultados').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
