@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control ODPE Pasco</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; background-color: #f4f7f6; }
+        h2 { color: #333; text-align: center; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        button.btn-buscar { background: #0056b3; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button.btn-guardar { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-top: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
+        .info-text { margin: 5px 0; color: #555; }
+    </style>
+</head>
+<body>
+    <h2>Control de Capacitación</h2>
+    <input type="number" id="buscarDni" placeholder="Ingrese DNI del miembro de mesa">
+    <button class="btn-buscar" onclick="consultar()">Buscar DNI</button>
+
+    <div id="resultado" class="card">
+        <h3 id="nombreCompleto" style="margin-top: 0; color: #0056b3;"></h3>
+        <p class="info-text"><strong>Cargo:</strong> <span id="cargo"></span></p>
+        <p class="info-text"><strong>Mesa:</strong> <span id="mesa"></span></p>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+        
+        <label><strong>Estado de Capacitación:</strong></label>
+        <select id="opcionCapacitacion">
+            <option value="">Seleccione una opción...</option>
+            <option value="1ra Jornada">1ra Jornada</option>
+            <option value="2da Jornada">2da Jornada</option>
+            <option value="Personalizada - Local">Personalizada - Local</option>
+            <option value="Personalizada - Domicilio">Personalizada - Domicilio</option>
+            <option value="Virtual">Virtual</option>
+            <option value="No Capacitado">No Capacitado</option>
+        </select>
+
+        <label><strong>Observaciones:</strong></label>
+        <input type="text" id="obs" placeholder="Ej: Cambio de número, no asistirá...">
+
+        <button class="btn-guardar" onclick="guardar()">Guardar Registro</button>
+        <p id="mensaje" style="text-align:center; font-weight:bold; margin-top: 15px;"></p>
+    </div>
+
+    <script>
+        // 1. PEGA AQUÍ EL ENLACE AZUL QUE COPIASTE DE TU IMAGEN
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHpxLnBr2_P1IYZ1aFxhGD5wUWdEZUQviUrTRM27BS5aUYfUSu5Y7pZl0fRXWxrcSO3A/exec';
+
+        // 2. PEGA AQUÍ EL ENLACE CSV DE GOOGLE SHEETS (El de "Archivo > Compartir > Publicar en la web > CSV")
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/1Y7NB0nJVeBaflH0UMhkCUctA6CtHFtnp7K7OZW4k-mg/edit?usp=sharing';
+
+        let dniActual = '';
+
+        async function consultar() {
+            const dni = document.getElementById('buscarDni').value.trim();
+            if(!dni) return alert("Ingrese un DNI válido");
+
+            document.getElementById('mensaje').innerText = 'Buscando en la base de datos...';
+            document.getElementById('mensaje').style.color = '#555';
+
+            try {
+                const response = await fetch(CSV_URL);
+                const text = await response.text();
+                const filas = text.split('\n');
+                let encontrado = false;
+
+                for(let i = 1; i < filas.length; i++) {
+                    const columnas = filas[i].split(',');
+                    if(columnas[1] && columnas[1].trim() === dni) { 
+                        document.getElementById('nombreCompleto').innerText = columnas[2] + ' ' + columnas[3];
+                        document.getElementById('cargo').innerText = columnas[4];
+                        document.getElementById('mesa').innerText = columnas[0];
+                        dniActual = dni;
+                        encontrado = true;
+                        
+                        document.getElementById('resultado').style.display = 'block';
+                        document.getElementById('mensaje').innerText = '';
+                        break;
+                    }
+                }
+                if(!encontrado) {
+                    alert("El DNI no figura en el padrón de Simón Bolívar.");
+                    document.getElementById('mensaje').innerText = '';
+                }
+            } catch(e) {
+                alert("Error de conexión al leer el padrón.");
+            }
+        }
+
+        function guardar() {
+            const cap = document.getElementById('opcionCapacitacion').value;
+            const obs = document.getElementById('obs').value;
+            
+            document.getElementById('mensaje').innerText = 'Guardando registro...';
+            document.getElementById('mensaje').style.color = '#0056b3';
+
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniActual}&cap=${encodeURIComponent(cap)}&obs=${encodeURIComponent(obs)}`;
+
+            fetch(urlEnvio, { mode: 'no-cors' })
+            .then(() => {
+                document.getElementById('mensaje').innerText = '¡Registro guardado exitosamente!';
+                document.getElementById('mensaje').style.color = '#28a745';
+                setTimeout(() => {
+                    document.getElementById('resultado').style.display = 'none';
+                    document.getElementById('buscarDni').value = '';
+                    document.getElementById('opcionCapacitacion').value = '';
+                    document.getElementById('obs').value = '';
+                }, 2500);
+            }).catch(() => {
+                document.getElementById('mensaje').innerText = 'Ocurrió un error al guardar.';
+                document.getElementById('mensaje').style.color = 'red';
+            });
+        }
+    </script>
+</body>
+</html>
