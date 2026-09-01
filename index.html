@@ -233,8 +233,9 @@
                 const response = await fetch(CSV_URL);
                 const text = await response.text();
                 
-                // Expresión regular robusta para separar por saltos de línea (\r\n o \n)
-                baseDeDatos = text.split(/\r?\n/);
+                let filasCrudas = text.split(/\r?\n/);
+                // Filtra la cabecera (index > 0) y filas vacías
+                baseDeDatos = filasCrudas.filter((fila, index) => index > 0 && fila.trim() !== '');
 
                 if (valor === DNI_SETH) { 
                     usuarioActual = 'SETH'; 
