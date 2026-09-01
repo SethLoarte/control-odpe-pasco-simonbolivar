@@ -232,8 +232,9 @@
             try {
                 const response = await fetch(CSV_URL);
                 const text = await response.text();
-                baseDeDatos = text.split('
-');
+                
+                // Expresión regular robusta para separar por saltos de línea (\r\n o \n)
+                baseDeDatos = text.split(/\r?\n/);
 
                 if (valor === DNI_SETH) { 
                     usuarioActual = 'SETH'; 
@@ -282,7 +283,7 @@
                 const col = fila.split(',');
                 if(col.length >= 8) {
                     let ieOriginal = col[7] ? col[7].trim() : 'SIN LOCAL';
-                    let institucionStr = ieOriginal.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+                    let institucionStr = ieOriginal.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     let mesa = col[0] ? col[0].trim() : '000000';
                     
                     let perteneceSeth = institucionStr.includes("SAN ANDRES");
@@ -368,7 +369,7 @@
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
                 if(col.length >= 8) {
-                    const institucion = col[7] ? col[7].toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "") : '';
+                    const institucion = col[7] ? col[7].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
                     const estaCapacitado = (col[8] && col[8].trim() !== "" && col[8].trim() !== "No Capacitado");
                     
                     if (institucion.includes("SAN ANDRES")) {
