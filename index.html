@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard ONPE - Simón Bolívar</title>
+    <!-- LIBRERÍA PARA GENERAR PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -108,6 +109,7 @@
                     </div>
 
                 </div>
+                <h3 style="color: var(--azul-onpe); margin: 30px 0 15px 0;">Listado de tu sector</h3>
             </div>
 
             <!-- TARJETAS DE RESULTADOS -->
@@ -129,26 +131,26 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'PEGA_TU_ENLACE_AZUL_AQUI';
-        const CSV_URL = 'PEGA_TU_ENLACE_CSV_AQUI';
+        // Enlaces integrados según iteraciones previas
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHpxLnBr2_P1IYZ1aFxhGD5wUWdEZUQviUrTRM27BS5aUYfUSu5Y7pZl0fRXWxrcSO3A/exec';
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShFcVD-MAHCeuCCteYy-mrnAU7VT9XWMQitmvFt_ZW8F2qssKpCI7upzfr_pJ2hoBZk-5gH4U9BaF-/pub?gid=1997588352&single=true&output=csv';
         const DNI_SETH = '71036931'; 
         const DNI_GOYITA = '70749305'; 
 
-        // Variables de Memoria Global
         let baseDeDatos = []; 
         let usuarioActual = ''; 
 
-        // 1. GENERADOR INTELIGENTE DE TARJETAS (Verifica Roles)
+        // 1. GENERADOR DE TARJETAS
         function generarTarjetaHTML(filaStr, esAdmin) {
             const col = filaStr.split(',');
-            if(col.length < 9) return '';
+            if(col.length < 8 || !col[1]) return '';
 
             let estadoActual = col[8] ? col[8].trim() : '';
+            let obsActual = col[9] ? col[9].trim() : 'Ninguna';
             let badgeHtml = (estadoActual && estadoActual !== "No Capacitado") 
                 ? `<div class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
                 : `<div class="status-badge">Sin registrar</div>`;
 
-            // Control de Acceso: Inputs editables solo para administradores
             let divContacto = esAdmin 
                 ? `<input type="text" id="dir_${col[1]}" value="${col[6] || ''}" placeholder="Dirección (Editable)" class="admin-input">
                    <input type="text" id="cel_${col[1]}" value="${col[5] || ''}" placeholder="Celular (Editable)" class="admin-input">`
@@ -159,13 +161,13 @@
                 <div class="top-cards">
                     <div class="top-card cargo-card">
                         <span>MIEMBRO DE MESA</span>
-                        <h4 style="font-size:16px;">${col[4]}</h4>
+                        <h4 style="font-size:16px;">${col[4] || ''}</h4>
                     </div>
                     <div class="top-card">
                         <div class="icon-circle">👤</div>
                         <div class="card-data">
                             <p>DNI: ${col[1]}</p>
-                            <h4>${col[2]} ${col[3]}</h4>
+                            <h4>${col[2] || ''} ${col[3] || ''}</h4>
                         </div>
                     </div>
                     <div class="top-card">
@@ -181,7 +183,7 @@
                         <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Capacitación</h3>
                         <div class="form-area">
                             ${badgeHtml}
-                            <div style="font-size:11px; color:#666; margin-bottom:8px;">Obs. actuales: ${col[9] || 'Ninguna'}</div>
+                            <div style="font-size:11px; color:#666; margin-bottom:8px;">Obs. actuales: ${obsActual}</div>
                             <select id="cap_${col[1]}">
                                 <option value="">Actualizar estado a...</option>
                                 <option value="1ra Jornada">1ra Jornada</option>
@@ -199,9 +201,9 @@
                     <div class="main-card">
                         <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Localización</h3>
                         <div style="background:#f4f6f9; border-radius:8px; padding:12px; text-align:center;">
-                            <strong style="font-size:13px; display:block; margin-bottom:8px;">${col[7]}</strong>
+                            <strong style="font-size:13px; display:block; margin-bottom:8px;">${col[7] || ''}</strong>
                             <span style="color:#666; font-size:11px;">● N° de Mesa:</span>
-                            <h4 style="color:var(--celeste-onpe); font-size:22px;">${col[0]}</h4>
+                            <h4 style="color:var(--celeste-onpe); font-size:22px;">${col[0] || ''}</h4>
                         </div>
                     </div>
                 </div>
@@ -218,7 +220,6 @@
             msj.style.color = '#333'; msj.innerText = 'Conectando con la base de datos...';
             
             try {
-                // Descargamos la data una sola vez y la guardamos en memoria
                 const response = await fetch(CSV_URL);
                 const text = await response.text();
                 baseDeDatos = text.split('\n');
@@ -238,15 +239,17 @@
             }
         }
 
-        // 3. VISTA PARA CM / RLV (Búsqueda Individual)
+        // 3. VISTA PARA CM / RLV
         function mostrarBusquedaNormal(valor) {
             let htmlTarjetas = '';
             const esDni = valor.length === 8;
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
-                if(col.length > 8 && ((esDni && col[1].trim() === valor) || (!esDni && col[0].trim() === valor))) {
-                    htmlTarjetas += generarTarjetaHTML(fila, false); // false = bloquea edición de celular
+                if(col.length >= 8) {
+                    if((esDni && col[1].trim() === valor) || (!esDni && col[0].trim() === valor)) {
+                        htmlTarjetas += generarTarjetaHTML(fila, false); 
+                    }
                 }
             });
 
@@ -260,26 +263,37 @@
             }
         }
 
-        // 4. VISTA PARA ADMINISTRADORES (Dashboard + Listado Completo Editable)
+        // 4. VISTA PARA ADMINISTRADORES (Con Ordenamiento Lógico por Mesa)
         function prepararPanelAdmin() {
-            let htmlTarjetas = '';
+            let filasFiltradas = [];
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
-                if(col.length > 8) {
-                    const institucion = col[7] ? col[7].toUpperCase() : '';
+                if(col.length >= 8) {
+                    const institucion = col[7] ? col[7].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
                     if (usuarioActual === 'SETH' && institucion.includes("SAN ANDRES")) {
-                        htmlTarjetas += generarTarjetaHTML(fila, true); // true = Inputs habilitados
+                        filasFiltradas.push(fila);
                     } else if (usuarioActual === 'GOYITA' && !institucion.includes("SAN ANDRES")) {
-                        htmlTarjetas += generarTarjetaHTML(fila, true);
+                        filasFiltradas.push(fila);
                     }
                 }
+            });
+
+            // Ordenamiento ascendente por la Columna 0 (N° de Mesa)
+            filasFiltradas.sort((a, b) => {
+                let mesaA = a.split(',')[0].trim();
+                let mesaB = b.split(',')[0].trim();
+                return mesaA.localeCompare(mesaB);
+            });
+
+            let htmlTarjetas = '';
+            filasFiltradas.forEach(fila => {
+                htmlTarjetas += generarTarjetaHTML(fila, true);
             });
 
             document.getElementById('contenedor-resultados').innerHTML = htmlTarjetas;
             document.getElementById('admin-graficos').classList.remove('hidden');
             
-            // Ocultar botones de PDF según el usuario
             document.getElementById('btn-pdf-seth').style.display = (usuarioActual === 'SETH') ? 'block' : 'none';
             document.getElementById('btn-pdf-goyita').style.display = (usuarioActual === 'GOYITA') ? 'block' : 'none';
 
@@ -294,8 +308,8 @@
 
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
-                if(col.length > 8) {
-                    const institucion = col[7] ? col[7].toUpperCase() : '';
+                if(col.length >= 8) {
+                    const institucion = col[7] ? col[7].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
                     const estaCapacitado = (col[8] && col[8].trim() !== "" && col[8].trim() !== "No Capacitado");
                     
                     if (institucion.includes("SAN ANDRES")) {
@@ -309,7 +323,6 @@
             const pctSanAndres = sanAndresTotal > 0 ? ((sanAndresCap / sanAndresTotal) * 100).toFixed(1) : 0;
             const pctResto = restoTotal > 0 ? ((restoCap / restoTotal) * 100).toFixed(1) : 0;
 
-            // Animar gráficos inyectando CSS
             document.getElementById('circulo-paragsha').style.setProperty('--porcentaje', `${pctSanAndres}%`);
             document.getElementById('valor-paragsha').innerText = `${pctSanAndres}%`;
             document.getElementById('texto-paragsha').innerText = `${sanAndresCap} / ${sanAndresTotal}`;
@@ -318,21 +331,19 @@
             document.getElementById('valor-resto').innerText = `${pctResto}%`;
             document.getElementById('texto-resto').innerText = `${restoCap} / ${restoTotal}`;
 
-            // Guardamos las métricas temporalmente para el PDF
             window.metricas = { 
                 sanAndres: { cap: sanAndresCap, total: sanAndresTotal }, 
                 resto: { cap: restoCap, total: restoTotal } 
             };
         }
 
-        // 6. GUARDAR (Y Actualizar UI Optimistamente)
+        // 6. GUARDAR
         function guardar(dniTarget) {
             const cap = document.getElementById('cap_' + dniTarget).value;
             const obs = document.getElementById('obs_' + dniTarget).value;
             const msj = document.getElementById('msg_' + dniTarget);
             const btn = document.getElementById('btn_' + dniTarget);
             
-            // Si es admin, capturamos los inputs extras
             let cel = '', dir = '';
             const esAdmin = (usuarioActual === 'SETH' || usuarioActual === 'GOYITA');
             if(esAdmin) {
@@ -342,19 +353,20 @@
 
             msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; btn.disabled = true;
 
-            // ¡Reactividad! Actualizamos la memoria local y movemos el gráfico ANTES de que el servidor responda
             if(cap !== "") {
-                const index = baseDeDatos.findIndex(f => f.split(',')[1].trim() === dniTarget);
+                const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
                 if(index !== -1) {
                     let colArray = baseDeDatos[index].split(',');
+                    while(colArray.length < 10) colArray.push('');
+                    
                     colArray[8] = cap; 
+                    colArray[9] = obs !== "" ? obs : colArray[9];
                     if(esAdmin) { colArray[5] = cel; colArray[6] = dir; }
                     baseDeDatos[index] = colArray.join(',');
                 }
                 actualizarGraficosCirculares(); 
             }
 
-            // Enviamos al backend (Recuerda actualizar tu Google Apps Script para que reciba &cel= y &dir=)
             const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(cap)}&obs=${encodeURIComponent(obs)}&cel=${encodeURIComponent(cel)}&dir=${encodeURIComponent(dir)}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
