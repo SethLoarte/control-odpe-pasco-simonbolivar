@@ -7,227 +7,86 @@
     <style>
         :root {
             --azul-onpe: #003366;
-            --celeste-onpe: #4a90e2;
             --rojo-onpe: #e30613;
             --gris-fondo: #f4f6f9;
             --blanco: #ffffff;
-            --texto-oscuro: #333333;
-            --texto-claro: #666666;
         }
-
-        /* Reseteo universal y corrección de asimetría */
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body { 
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-            background-color: var(--gris-fondo); 
-            color: var(--texto-oscuro); 
-            min-height: 100vh;
-            width: 100%;
-            overflow-x: hidden;
-        }
-
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background-color: var(--gris-fondo); color: #333; }
         .hidden { display: none !important; }
         
         /* --- VISTA INICIO --- */
         #login-view { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            padding: clamp(10px, 3vw, 30px); 
-            background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); 
-            background-size: cover; 
-            background-position: center;
-            background-attachment: fixed;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; 
+            background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); background-size: cover; background-position: center;
         }
-
-        .login-card { 
-            background: var(--blanco); 
-            padding: clamp(20px, 5vw, 40px) clamp(15px, 4vw, 30px); 
-            border-radius: 12px; 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2); 
-            width: min(100%, 420px); 
-            text-align: center; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .login-card img {
-            max-width: 80%;
-            height: auto;
-            max-height: 60px;
-            margin-bottom: 15px;
-            object-fit: contain;
-        }
-
-        .login-card h2 { color: var(--azul-onpe); font-size: clamp(16px, 2.5vw, 20px); margin-bottom: 5px; }
-        .login-card h3 { color: var(--rojo-onpe); font-size: clamp(13px, 2vw, 16px); margin-bottom: 20px; }
-
-        .input-group { width: 100%; margin-bottom: 15px; }
-        .input-group input { 
-            width: 100%; 
-            padding: 12px 15px; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            font-size: 16px; 
-            text-align: center; 
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        .input-group input:focus { border-color: var(--celeste-onpe); }
-
-        .btn-consultar { 
-            width: 100%; 
-            background-color: #757575; 
-            color: var(--blanco); 
-            border: none; 
-            padding: 14px; 
-            font-size: 16px; 
-            font-weight: bold; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            transition: background 0.3s ease; 
-        }
-        .btn-consultar:hover { background-color: #555; }
-
-        /* --- VISTA RESULTADOS Y NAVBAR --- */
-        .navbar { 
-            background: var(--blanco); 
-            padding: clamp(10px, 2vw, 15px) clamp(15px, 4vw, 30px); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-            width: 100%;
-        }
-        .navbar img { height: clamp(30px, 4vw, 42px); width: auto; object-fit: contain; }
-        .btn-salir { color: var(--azul-onpe); background: none; border: none; font-size: clamp(14px, 2vw, 16px); font-weight: bold; cursor: pointer; }
-
-        .dashboard-container { width: min(100%, 1100px); margin: clamp(15px, 3vw, 30px) auto; padding: 0 clamp(10px, 2vw, 20px); }
+        .login-card { background: var(--blanco); padding: 40px 30px; border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); max-width: 400px; width: 100%; text-align: center; }
+        .login-card h2 { color: var(--azul-onpe); font-size: 20px; margin-bottom: 5px; }
+        .login-card h3 { color: var(--rojo-onpe); font-size: 16px; margin-top: 0; margin-bottom: 25px; }
+        .input-group input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; text-align: center; }
+        .btn-consultar { width: 100%; background-color: #757575; color: var(--blanco); border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.3s; }
         
-        /* --- ESTILO ONPE DASHBOARD (PARA CM) --- */
-        .onpe-dashboard { background: transparent; margin-bottom: 30px; }
-        .top-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 15px; margin-bottom: 15px; }
-        .top-card { background: var(--blanco); border-radius: 10px; padding: clamp(12px, 2vw, 20px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; width: 100%; }
-        .top-card.cargo-card { background: var(--rojo-onpe); color: var(--blanco); justify-content: center; text-align: center; flex-direction: column; gap: 4px; }
-        .top-card.cargo-card h4 { font-size: clamp(18px, 2.5vw, 22px); font-weight: bold; text-transform: uppercase; word-break: break-word; }
-        .top-card.cargo-card span { font-size: clamp(12px, 1.8vw, 14px); }
-        .icon-circle { width: 42px; height: 42px; background: #eef2f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--azul-onpe); flex-shrink: 0; }
-        .card-data p { font-size: 12px; color: var(--celeste-onpe); font-weight: bold; }
-        .card-data h4 { font-size: clamp(13px, 1.8vw, 15px); color: var(--azul-onpe); text-transform: uppercase; word-break: break-word; }
-
-        .middle-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 15px; }
-        .main-card { background: var(--blanco); border-radius: 10px; padding: clamp(15px, 2.5vw, 20px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); width: 100%; }
-        .main-card-title { color: var(--celeste-onpe); font-size: clamp(14px, 2vw, 16px); margin-bottom: 12px; font-weight: 600; }
+        /* --- VISTA RESULTADOS --- */
+        .navbar { background: var(--blanco); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn-salir { color: var(--azul-onpe); background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .dashboard-container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
         
-        .local-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
-        .ie-box { background: var(--celeste-onpe); color: var(--blanco); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; word-break: break-word; }
-        .ie-box .map-icon { font-size: 24px; border-right: 1px solid rgba(255,255,255,0.3); padding-right: 8px; flex-shrink: 0; }
-        .mesa-box { background: #f4f6f9; border-radius: 8px; padding: 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-        .mesa-box span { color: var(--texto-claro); font-size: 11px; }
-        .mesa-box h4 { color: var(--celeste-onpe); font-size: clamp(18px, 2.5vw, 22px); margin-top: 4px; }
-
-        .form-area { background: #fcfcfc; border: 1px solid #eee; border-radius: 8px; padding: 12px; }
-        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-bottom: 8px; background: #ffebee; color: var(--rojo-onpe); }
-        .form-area select, .form-area input { width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; font-family: inherit; background-color: var(--blanco); }
-        .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; transition: background 0.3s ease; }
-        .btn-guardar:hover { background: #002244; }
-
-        /* --- PANELES SECRETOS DE ADMINISTRACIÓN --- */
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .stat-box { background: var(--blanco); padding: 25px; border-radius: 10px; border-top: 5px solid var(--celeste-onpe); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .stat-box h4 { margin-bottom: 15px; color: var(--azul-onpe); font-size: 18px; }
-        .stat-numbers { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
-        .stat-numbers .big { font-size: 28px; font-weight: bold; color: var(--texto-oscuro); }
-        .stat-numbers .percent { font-size: 18px; font-weight: bold; color: var(--celeste-onpe); }
-        .progress-bar { width: 100%; background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--celeste-onpe); width: 0%; transition: width 1s ease-in-out; }
+        /* Tarjeta Dinámica de Miembro */
+        .member-card { background: var(--blanco); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 5px solid var(--azul-onpe); }
+        .member-name { color: var(--azul-onpe); font-size: 18px; margin: 0 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 15px; }
+        .data-grid div { background: #f9f9f9; padding: 8px; border-radius: 4px; }
+        .full-width { grid-column: span 2; }
+        
+        .form-section { background: #fdfdfd; padding: 15px; border-radius: 5px; border-left: 4px solid var(--rojo-onpe); border: 1px solid #eee; }
+        .form-section select, .form-section input { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
 
     <div id="login-view">
         <div class="login-card">
-            <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE Logo">
+            <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE Logo" style="height: 60px; margin-bottom: 15px;">
             <h2>Elecciones Regionales</h2>
             <h3>Distrito Simón Bolívar</h3>
             
             <div class="input-group">
-                <!-- Se cambió a type="number" y se añadió inputmode para invocar teclado numérico en móviles -->
-                <input type="number" inputmode="numeric" id="inputBusqueda" placeholder="DNI (8) o N° Mesa (6)" onkeypress="if(event.key === 'Enter') consultar()">
+                <input type="number" id="inputBusqueda" placeholder="DNI (8) o N° Mesa (6)" onkeypress="if(event.key === 'Enter') consultar()">
             </div>
             <button class="btn-consultar" onclick="consultar()" id="btnConsultarPrincipal">CONSULTAR</button>
-            <p id="mensaje-login" style="font-size: 13px; margin-top: 15px; font-weight: bold;"></p>
+            <p id="mensaje-login" style="font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
 
-    <!-- PANEL CM (El normal) -->
     <div id="dashboard-view" class="hidden">
         <div class="navbar">
-            <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE">
+            <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE" style="height: 40px;">
             <button class="btn-salir" onclick="cerrarSesion()">Salir ➔</button>
         </div>
-        <div class="dashboard-container" id="contenedor-resultados"></div>
-    </div>
-
-    <!-- PANELES SECRETOS DE ADMINISTRACIÓN -->
-    <div id="admin-view" class="hidden">
-        <div class="navbar">
-            <strong style="color: var(--rojo-onpe);" id="admin-title">PANEL DE CONTROL</strong>
-            <button class="btn-salir" onclick="cerrarSesion()">Salir ➔</button>
-        </div>
-        <div class="dashboard-container">
-            <div class="admin-header">
-                <h2 style="color: var(--azul-onpe);">Métricas de Capacitación</h2>
-                <span style="background: var(--rojo-onpe); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold;">Tiempo Real</span>
-            </div>
-            
-            <div class="admin-stats" id="admin-stats-container">
-                <!-- Se inyecta por JS según el usuario -->
-            </div>
+        <div class="dashboard-container" id="contenedor-resultados">
+            <!-- Las tarjetas se inyectarán aquí mediante JavaScript -->
         </div>
     </div>
 
     <script>
-        // 1. CONFIGURA AQUÍ TUS ENLACES Y DNIS MAESTROS
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHpxLnBr2_P1IYZ1aFxhGD5wUWdEZUQviUrTRM27BS5aUYfUSu5Y7pZl0fRXWxrcSO3A/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShFcVD-MAHCeuCCteYy-mrnAU7VT9XWMQitmvFt_ZW8F2qssKpCI7upzfr_pJ2hoBZk-5gH4U9BaF-/pub?gid=1997588352&single=true&output=csv';
-        
-        const DNI_SETH = '71036931'; 
-        const DNI_GOYITA = 'DNI_GOYITA_AQUI'; 
 
         async function consultar() {
             const valor = document.getElementById('inputBusqueda').value.trim();
             const msj = document.getElementById('mensaje-login');
             const btn = document.getElementById('btnConsultarPrincipal');
             
-            // RUTAS OCULTAS PARA ADMINISTRADORES
-            if (valor === DNI_SETH) {
-                generarMetricasAdmin('SETH');
-                return;
-            }
-            if (valor === DNI_GOYITA) {
-                generarMetricasAdmin('GOYITA');
-                return;
-            }
-
-            // RUTA NORMAL PARA CM
             if(valor.length !== 8 && valor.length !== 6) {
                 msj.style.color = 'red';
                 msj.innerText = "Ingrese un DNI (8 dígitos) o Mesa (6 dígitos).";
                 return;
             }
 
+            const esDni = valor.length === 8;
             msj.style.color = '#333';
-            msj.innerText = 'Consultando base de datos...';
+            msj.innerText = 'Consultando padrón...';
             btn.disabled = true;
 
             try {
@@ -237,7 +96,6 @@
                 
                 let htmlTarjetas = '';
                 let encontrados = 0;
-                const esDni = valor.length === 8;
 
                 for(let i = 1; i < filas.length; i++) {
                     const col = filas[i].split(',');
@@ -245,78 +103,44 @@
                         const mesaStr = col[0].trim();
                         const dniStr = col[1].trim();
                         
+                        // Lógica de coincidencia: Si ingresó DNI busca en col[1], si ingresó Mesa busca en col[0]
                         if ((esDni && dniStr === valor) || (!esDni && mesaStr === valor)) {
                             encontrados++;
                             
-                            let estadoActual = col[8] ? col[8].trim() : '';
-                            let badgeHtml = estadoActual 
-                                ? `<div class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
-                                : `<div class="status-badge">Sin registrar</div>`;
-
                             htmlTarjetas += `
-                            <div class="onpe-dashboard">
-                                <div class="top-cards">
-                                    <div class="top-card cargo-card">
-                                        <span>MIEMBRO DE MESA</span>
-                                        <h4>${col[4]}</h4>
-                                    </div>
-                                    <div class="top-card">
-                                        <div class="icon-circle">👤</div>
-                                        <div class="card-data">
-                                            <p>DNI: ${col[1]}</p>
-                                            <h4>${col[2]} ${col[3]}</h4>
-                                        </div>
-                                    </div>
-                                    <div class="top-card">
-                                        <div class="icon-circle">📍</div>
-                                        <div class="card-data">
-                                            <p>Domicilio / Contacto</p>
-                                            <h4 style="font-size:12px; text-transform:none;">${col[6] || 'No especificado'}<br>📱 Cel: ${col[5] || 'Sin número'}</h4>
-                                        </div>
-                                    </div>
+                            <div class="member-card">
+                                <h3 class="member-name">👤 ${col[2]} ${col[3]}</h3>
+                                <div class="data-grid">
+                                    <div><strong>DNI:</strong><br>${col[1]}</div>
+                                    <div><strong>MESA:</strong><br>${col[0]}</div>
+                                    <div><strong>Cargo:</strong><br>${col[4]}</div>
+                                    <div><strong>Celular:</strong><br>${col[5] || '-'}</div>
+                                    <div class="full-width"><strong>Domicilio:</strong><br>${col[6] || '-'}</div>
+                                    <div class="full-width"><strong>Local (I.E.):</strong><br>${col[7]}</div>
+                                    <div><strong>Capacitación Actual:</strong><br><span style="color:var(--rojo-onpe); font-weight:bold;">${col[8] || 'Sin registrar'}</span></div>
+                                    <div><strong>Obs. Actuales:</strong><br>${col[9] || 'Ninguna'}</div>
                                 </div>
 
-                                <div class="middle-section">
-                                    <div class="main-card">
-                                        <h3 class="main-card-title">Capacitación (Gestión Interna)</h3>
-                                        <div class="form-area">
-                                            ${badgeHtml}
-                                            <div style="font-size:11px; color:#666; margin-bottom:8px;">Obs. actuales: ${col[9] || 'Ninguna'}</div>
-                                            
-                                            <select id="cap_${col[1]}">
-                                                <option value="">Actualizar estado a...</option>
-                                                <option value="1ra Jornada">1ra Jornada</option>
-                                                <option value="2da Jornada">2da Jornada</option>
-                                                <option value="Personalizada - Local">Personalizada - Local</option>
-                                                <option value="Personalizada - Domicilio">Personalizada - Domicilio</option>
-                                                <option value="Virtual">Virtual</option>
-                                                <option value="No Capacitado">No Capacitado</option>
-                                            </select>
-                                            <input type="text" id="obs_${col[1]}" placeholder="Añadir observación nueva...">
-                                            <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar Datos</button>
-                                            <p id="msg_${col[1]}" style="text-align:center; font-size:12px; font-weight:bold; margin-top:8px;"></p>
-                                        </div>
-                                    </div>
+                                <div class="form-section">
+                                    <label style="font-size: 13px; font-weight: bold;">Actualizar Capacitación:</label>
+                                    <select id="cap_${col[1]}">
+                                        <option value="">Seleccione una opción...</option>
+                                        <option value="1ra Jornada">1ra Jornada</option>
+                                        <option value="2da Jornada">2da Jornada</option>
+                                        <option value="Personalizada - Local">Personalizada - Local</option>
+                                        <option value="Personalizada - Domicilio">Personalizada - Domicilio</option>
+                                        <option value="Virtual">Virtual</option>
+                                        <option value="No Capacitado">No Capacitado</option>
+                                    </select>
 
-                                    <div class="main-card">
-                                        <h3 class="main-card-title">Tu local de votación</h3>
-                                        <div class="local-box">
-                                            <div class="ie-box">
-                                                <div class="map-icon">🗺️</div>
-                                                <div>
-                                                    <strong style="font-size:13px;">${col[7]}</strong><br>
-                                                    <span style="font-size:11px; opacity:0.9;">Distrito Simón Bolívar</span>
-                                                </div>
-                                            </div>
-                                            <div class="mesa-box">
-                                                <span>● N° de Mesa:</span>
-                                                <h4>${col[0]}</h4>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <label style="font-size: 13px; font-weight: bold;">Agregar Observación:</label>
+                                    <input type="text" id="obs_${col[1]}" placeholder="Ej: Viajó, número incorrecto...">
+
+                                    <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar a este miembro</button>
+                                    <p id="msg_${col[1]}" style="text-align:center; font-size:13px; font-weight:bold; margin-top:10px;"></p>
                                 </div>
                             </div>
-                            <hr style="border: 0; border-top: 2px dashed #ccc; margin: 25px 0;">`;
+                            `;
                         }
                     }
                 }
@@ -353,7 +177,7 @@
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => {
-                msj.style.color = '#2e7d32';
+                msj.style.color = '#28a745';
                 msj.innerText = '¡Actualizado con éxito!';
             }).catch(() => {
                 msj.style.color = 'red';
@@ -364,98 +188,8 @@
             });
         }
 
-        // LÓGICA DE LOS PANELES SECRETOS
-        async function generarMetricasAdmin(tipoAdmin) {
-            const msj = document.getElementById('mensaje-login');
-            msj.style.color = '#333';
-            msj.innerText = 'Cargando métricas maestras...';
-
-            try {
-                const response = await fetch(CSV_URL);
-                const text = await response.text();
-                const filas = text.split('\n');
-                
-                let paragshaTotal = 0, paragshaCap = 0;
-                let restoTotal = 0, restoCap = 0;
-                let generalTotal = 0, generalCap = 0;
-
-                for(let i = 1; i < filas.length; i++) {
-                    const col = filas[i].split(',');
-                    if(col.length > 8) {
-                        const local = col[7] ? col[7].toUpperCase() : '';
-                        const estaCapacitado = (col[8] && col[8].trim() !== "" && col[8].trim() !== "No Capacitado");
-
-                        generalTotal++;
-                        if (estaCapacitado) generalCap++;
-
-                        if (local.includes("PARAGSHA")) {
-                            paragshaTotal++;
-                            if (estaCapacitado) paragshaCap++;
-                        } else {
-                            restoTotal++;
-                            if (estaCapacitado) restoCap++;
-                        }
-                    }
-                }
-
-                const pctParagsha = paragshaTotal > 0 ? Math.round((paragshaCap / paragshaTotal) * 100) : 0;
-                const pctResto = restoTotal > 0 ? Math.round((restoCap / restoTotal) * 100) : 0;
-                const pctGeneral = generalTotal > 0 ? Math.round((generalCap / generalTotal) * 100) : 0;
-
-                let htmlAdmin = '';
-
-                // ESPACIO 1: SETH (Paragsha vs Resto)
-                if (tipoAdmin === 'SETH') {
-                    document.getElementById('admin-title').innerText = "PANEL MAESTRO - SETH";
-                    htmlAdmin = `
-                        <div class="stat-box">
-                            <h4>Mesas PARAGSHA</h4>
-                            <div class="stat-numbers">
-                                <span class="big">${paragshaCap} / ${paragshaTotal}</span>
-                                <span class="percent">${pctParagsha}%</span>
-                            </div>
-                            <div class="progress-bar"><div class="progress-fill" style="width: ${pctParagsha}%;"></div></div>
-                        </div>
-                        <div class="stat-box" style="border-top-color: var(--rojo-onpe);">
-                            <h4>RESTO del Distrito</h4>
-                            <div class="stat-numbers">
-                                <span class="big">${restoCap} / ${restoTotal}</span>
-                                <span class="percent" style="color: var(--rojo-onpe);">${pctResto}%</span>
-                            </div>
-                            <div class="progress-bar"><div class="progress-fill" style="width: ${pctResto}%; background: var(--rojo-onpe);"></div></div>
-                        </div>
-                    `;
-                } 
-                // ESPACIO 2: GOYITA (Avance Global)
-                else if (tipoAdmin === 'GOYITA') {
-                    document.getElementById('admin-title').innerText = "PANEL MAESTRO - GOYITA";
-                    htmlAdmin = `
-                        <div class="stat-box" style="border-top-color: #28a745;">
-                            <h4>Avance Global Distrito</h4>
-                            <div class="stat-numbers">
-                                <span class="big">${generalCap} / ${generalTotal}</span>
-                                <span class="percent" style="color: #28a745;">${pctGeneral}%</span>
-                            </div>
-                            <div class="progress-bar"><div class="progress-fill" style="width: ${pctGeneral}%; background: #28a745;"></div></div>
-                        </div>
-                    `;
-                }
-
-                document.getElementById('admin-stats-container').innerHTML = htmlAdmin;
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('admin-view').classList.remove('hidden');
-                document.getElementById('inputBusqueda').value = '';
-                msj.innerText = '';
-
-            } catch(e) {
-                msj.style.color = 'red';
-                msj.innerText = "Error cargando métricas: " + e;
-            }
-        }
-
         function cerrarSesion() {
             document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('admin-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
             document.getElementById('contenedor-resultados').innerHTML = '';
         }
