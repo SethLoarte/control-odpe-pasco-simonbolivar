@@ -7,11 +7,14 @@
     <style>
         :root {
             --azul-onpe: #003366;
+            --celeste-onpe: #4a90e2;
             --rojo-onpe: #e30613;
             --gris-fondo: #f4f6f9;
             --blanco: #ffffff;
+            --texto-oscuro: #333333;
+            --texto-claro: #666666;
         }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background-color: var(--gris-fondo); color: #333; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background-color: var(--gris-fondo); color: var(--texto-oscuro); }
         .hidden { display: none !important; }
         
         /* --- VISTA INICIO --- */
@@ -19,7 +22,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; 
             background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); background-size: cover; background-position: center;
         }
-        .login-card { background: var(--blanco); padding: 40px 30px; border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); max-width: 400px; width: 100%; text-align: center; }
+        .login-card { background: var(--blanco); padding: 40px 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); max-width: 400px; width: 100%; text-align: center; }
         .login-card h2 { color: var(--azul-onpe); font-size: 20px; margin-bottom: 5px; }
         .login-card h3 { color: var(--rojo-onpe); font-size: 16px; margin-top: 0; margin-bottom: 25px; }
         .input-group input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; text-align: center; }
@@ -28,26 +31,49 @@
         /* --- VISTA RESULTADOS --- */
         .navbar { background: var(--blanco); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .btn-salir { color: var(--azul-onpe); background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .dashboard-container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .dashboard-container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
         
-        /* Tarjeta Dinámica de Miembro */
-        .member-card { background: var(--blanco); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 5px solid var(--azul-onpe); }
-        .member-name { color: var(--azul-onpe); font-size: 18px; margin: 0 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        /* --- ESTILO ONPE DASHBOARD (NUEVO) --- */
+        .onpe-dashboard { background: transparent; margin-bottom: 40px; }
         
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 15px; }
-        .data-grid div { background: #f9f9f9; padding: 8px; border-radius: 4px; }
-        .full-width { grid-column: span 2; }
+        /* Fila Superior (Top Cards) */
+        .top-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .top-card { background: var(--blanco); border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 15px; }
+        .top-card.cargo-card { background: var(--rojo-onpe); color: var(--blanco); justify-content: center; text-align: center; flex-direction: column; padding: 15px; gap: 5px;}
+        .top-card.cargo-card h4 { margin: 0; font-size: 22px; font-weight: bold; text-transform: uppercase; }
+        .top-card.cargo-card span { font-size: 14px; }
+        .icon-circle { width: 45px; height: 45px; background: #eef2f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--azul-onpe); flex-shrink: 0;}
+        .card-data p { margin: 0; font-size: 12px; color: var(--celeste-onpe); font-weight: bold; }
+        .card-data h4 { margin: 3px 0 0 0; font-size: 15px; color: var(--azul-onpe); text-transform: uppercase; }
+
+        /* Fila Inferior (Middle Section) */
+        .middle-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 768px) { .middle-section { grid-template-columns: 1fr; } }
         
-        .form-section { background: #fdfdfd; padding: 15px; border-radius: 5px; border-left: 4px solid var(--rojo-onpe); border: 1px solid #eee; }
-        .form-section select, .form-section input { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
+        .main-card { background: var(--blanco); border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .main-card-title { color: var(--celeste-onpe); font-size: 16px; margin: 0 0 15px 0; font-weight: normal; }
+        
+        /* Bloque Local Votación */
+        .local-box { display: flex; gap: 15px; align-items: stretch; flex-wrap: wrap;}
+        .ie-box { background: var(--celeste-onpe); color: var(--blanco); border-radius: 8px; padding: 15px; flex: 2; min-width: 200px; display: flex; align-items: center; gap: 10px; }
+        .ie-box .map-icon { font-size: 30px; border-right: 1px solid rgba(255,255,255,0.3); padding-right: 10px; }
+        .mesa-box { background: #f4f6f9; border-radius: 8px; padding: 15px; flex: 1; text-align: center; min-width: 100px;}
+        .mesa-box span { color: var(--texto-claro); font-size: 12px; }
+        .mesa-box h4 { color: var(--celeste-onpe); font-size: 20px; margin: 5px 0 0 0; }
+
+        /* Formulario Capacitación */
+        .form-area { background: #fcfcfc; border: 1px solid #eee; border-radius: 8px; padding: 15px; }
+        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-bottom: 10px; background: #ffebee; color: var(--rojo-onpe); }
+        .form-area select, .form-area input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: inherit; }
+        .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-guardar:hover { background: #002244; }
     </style>
 </head>
 <body>
 
     <div id="login-view">
         <div class="login-card">
-            <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE Logo" style="height: 60px; margin-bottom: 15px;">
+            <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" style="height: 60px; margin-bottom: 15px;">
             <h2>Elecciones Regionales</h2>
             <h3>Distrito Simón Bolívar</h3>
             
@@ -65,7 +91,7 @@
             <button class="btn-salir" onclick="cerrarSesion()">Salir ➔</button>
         </div>
         <div class="dashboard-container" id="contenedor-resultados">
-            <!-- Las tarjetas se inyectarán aquí mediante JavaScript -->
+            <!-- Interfaz inyectada vía JS -->
         </div>
     </div>
 
@@ -86,7 +112,7 @@
 
             const esDni = valor.length === 8;
             msj.style.color = '#333';
-            msj.innerText = 'Consultando padrón...';
+            msj.innerText = 'Consultando base de datos...';
             btn.disabled = true;
 
             try {
@@ -103,43 +129,83 @@
                         const mesaStr = col[0].trim();
                         const dniStr = col[1].trim();
                         
-                        // Lógica de coincidencia: Si ingresó DNI busca en col[1], si ingresó Mesa busca en col[0]
                         if ((esDni && dniStr === valor) || (!esDni && mesaStr === valor)) {
                             encontrados++;
                             
+                            // Estado de capacitación visual
+                            let estadoActual = col[8] ? col[8].trim() : '';
+                            let badgeHtml = estadoActual 
+                                ? `<div class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
+                                : `<div class="status-badge">Sin registrar</div>`;
+
+                            // Inyección HTML del Nuevo Diseño ONPE
                             htmlTarjetas += `
-                            <div class="member-card">
-                                <h3 class="member-name">👤 ${col[2]} ${col[3]}</h3>
-                                <div class="data-grid">
-                                    <div><strong>DNI:</strong><br>${col[1]}</div>
-                                    <div><strong>MESA:</strong><br>${col[0]}</div>
-                                    <div><strong>Cargo:</strong><br>${col[4]}</div>
-                                    <div><strong>Celular:</strong><br>${col[5] || '-'}</div>
-                                    <div class="full-width"><strong>Domicilio:</strong><br>${col[6] || '-'}</div>
-                                    <div class="full-width"><strong>Local (I.E.):</strong><br>${col[7]}</div>
-                                    <div><strong>Capacitación Actual:</strong><br><span style="color:var(--rojo-onpe); font-weight:bold;">${col[8] || 'Sin registrar'}</span></div>
-                                    <div><strong>Obs. Actuales:</strong><br>${col[9] || 'Ninguna'}</div>
+                            <div class="onpe-dashboard">
+                                
+                                <div class="top-cards">
+                                    <div class="top-card cargo-card">
+                                        <span>MIEMBRO DE MESA</span>
+                                        <h4>${col[4]}</h4>
+                                    </div>
+                                    <div class="top-card">
+                                        <div class="icon-circle">👤</div>
+                                        <div class="card-data">
+                                            <p>DNI: ${col[1]}</p>
+                                            <h4>${col[2]} ${col[3]}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="top-card">
+                                        <div class="icon-circle">📍</div>
+                                        <div class="card-data">
+                                            <p>Domicilio / Contacto</p>
+                                            <h4 style="font-size:13px; text-transform:none;">${col[6] || 'No especificado'}<br>📱 Cel: ${col[5] || 'Sin número'}</h4>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div class="form-section">
-                                    <label style="font-size: 13px; font-weight: bold;">Actualizar Capacitación:</label>
-                                    <select id="cap_${col[1]}">
-                                        <option value="">Seleccione una opción...</option>
-                                        <option value="1ra Jornada">1ra Jornada</option>
-                                        <option value="2da Jornada">2da Jornada</option>
-                                        <option value="Personalizada - Local">Personalizada - Local</option>
-                                        <option value="Personalizada - Domicilio">Personalizada - Domicilio</option>
-                                        <option value="Virtual">Virtual</option>
-                                        <option value="No Capacitado">No Capacitado</option>
-                                    </select>
+                                <div class="middle-section">
+                                    
+                                    <div class="main-card">
+                                        <h3 class="main-card-title">Capacitación (Gestión Interna)</h3>
+                                        <div class="form-area">
+                                            ${badgeHtml}
+                                            <div style="font-size:12px; color:#666; margin-bottom:10px;">Obs. actuales: ${col[9] || 'Ninguna'}</div>
+                                            
+                                            <select id="cap_${col[1]}">
+                                                <option value="">Actualizar estado a...</option>
+                                                <option value="1ra Jornada">1ra Jornada</option>
+                                                <option value="2da Jornada">2da Jornada</option>
+                                                <option value="Personalizada - Local">Personalizada - Local</option>
+                                                <option value="Personalizada - Domicilio">Personalizada - Domicilio</option>
+                                                <option value="Virtual">Virtual</option>
+                                                <option value="No Capacitado">No Capacitado</option>
+                                            </select>
+                                            <input type="text" id="obs_${col[1]}" placeholder="Añadir observación nueva...">
+                                            <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar Datos</button>
+                                            <p id="msg_${col[1]}" style="text-align:center; font-size:12px; font-weight:bold; margin-top:8px;"></p>
+                                        </div>
+                                    </div>
 
-                                    <label style="font-size: 13px; font-weight: bold;">Agregar Observación:</label>
-                                    <input type="text" id="obs_${col[1]}" placeholder="Ej: Viajó, número incorrecto...">
+                                    <div class="main-card">
+                                        <h3 class="main-card-title">Tu local de votación</h3>
+                                        <div class="local-box">
+                                            <div class="ie-box">
+                                                <div class="map-icon">🗺️</div>
+                                                <div>
+                                                    <strong style="font-size:14px;">${col[7]}</strong><br>
+                                                    <span style="font-size:12px; opacity:0.9;">Distrito Simón Bolívar</span>
+                                                </div>
+                                            </div>
+                                            <div class="mesa-box">
+                                                <span>● N° de Mesa:</span>
+                                                <h4>${col[0]}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar a este miembro</button>
-                                    <p id="msg_${col[1]}" style="text-align:center; font-size:13px; font-weight:bold; margin-top:10px;"></p>
                                 </div>
                             </div>
+                            <hr style="border: 0; border-top: 2px dashed #ddd; margin: 30px 0;">
                             `;
                         }
                     }
@@ -177,7 +243,7 @@
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => {
-                msj.style.color = '#28a745';
+                msj.style.color = '#2e7d32';
                 msj.innerText = '¡Actualizado con éxito!';
             }).catch(() => {
                 msj.style.color = 'red';
