@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <!-- LIBRERÍA PARA GENERAR PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
@@ -16,7 +16,7 @@
         
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--gris-fondo); color: var(--texto-oscuro); min-height: 100vh; overflow-x: hidden; }
         
-        /* Solución Móvil: Fondo adaptativo sin "fixed" para evitar saltos al hacer scroll */
+        /* Solución Móvil: Fondo adaptativo */
         body.login-bg { 
             background-color: var(--gris-fondo);
             background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); 
@@ -54,7 +54,7 @@
         .circulo-valor { position: relative; font-size: 24px; font-weight: bold; color: var(--texto-oscuro); }
         .btn-pdf { background-color: var(--rojo-onpe); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-top: 10px; }
 
-        /* --- ACORDEONES --- */
+        /* --- ACORDEONES CON FLECHAS --- */
         .btn-acordeon { width: 100%; text-align: left; background: var(--blanco); border: 1px solid #ddd; padding: 15px; font-size: 16px; font-weight: bold; color: var(--azul-onpe); cursor: pointer; border-radius: 8px; margin-bottom: 8px; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 20px; }
         .btn-acordeon.ie-btn { background: #e3f2fd; border-left: 5px solid var(--celeste-onpe); margin-left: 10px; width: calc(100% - 10px); }
@@ -66,17 +66,26 @@
         .top-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .top-card { background: var(--blanco); border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
         .cargo-card { background: var(--rojo-onpe); color: var(--blanco); justify-content: center; text-align: center; flex-direction: column; gap: 4px; }
-        .icon-circle { width: 42px; height: 42px; background: #eef2f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .icon-circle { width: 42px; height: 42px; background: #eef2f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
         .card-data p { font-size: 12px; color: var(--celeste-onpe); font-weight: bold; }
         
-        .middle-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; }
+        .middle-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
         .main-card { background: var(--blanco); border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .form-area { background: #fcfcfc; border: 1px solid #eee; border-radius: 8px; padding: 12px; }
         .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-bottom: 8px; background: #ffebee; color: var(--rojo-onpe); }
         .form-area select, .form-area input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
-        
         .admin-input { border: 1px dashed var(--celeste-onpe) !important; background: #f0f7ff !important; font-size: 13px !important; padding: 6px !important; }
+
+        /* --- RESPONSIVE DESIGN (SOLUCIÓN MÓVIL) --- */
+        @media (max-width: 768px) {
+            .graficos-container { flex-direction: column; }
+            .middle-section { grid-template-columns: 1fr; }
+            .top-cards { grid-template-columns: 1fr; }
+            .btn-acordeon.ie-btn { margin-left: 0; width: 100%; }
+            .btn-acordeon.mesa-btn { margin-left: 10px; width: calc(100% - 10px); }
+            .login-card { padding: 20px; }
+        }
     </style>
 </head>
 <body class="login-bg">
@@ -234,7 +243,6 @@
                 const text = await response.text();
                 
                 let filasCrudas = text.split(/\r?\n/);
-                // Filtra la cabecera (index > 0) y filas vacías
                 baseDeDatos = filasCrudas.filter((fila, index) => index > 0 && fila.trim() !== '');
 
                 if (valor === DNI_SETH) { 
@@ -276,7 +284,7 @@
             }
         }
 
-        // 4. VISTA ADMINISTRADOR: ACORDEONES ANIDADOS Y CARGA DIFERIDA
+        // 4. VISTA ADMINISTRADOR: ACORDEONES ANIDADOS, FLECHAS Y CARGA DIFERIDA
         function prepararPanelAdmin() {
             let datosAgrupados = {};
             
@@ -298,9 +306,8 @@
                 }
             });
 
-            // Construir HTML de los botones de acordeón
             let htmlAcordeon = `
-                <button class="btn-acordeon main-btn" onclick="toggleAcordeon('panel-datos-global')">📁 VER DATOS Y PADRÓN</button>
+                <button class="btn-acordeon main-btn" onclick="toggleAcordeon('panel-datos-global', this)">📁 VER DATOS Y PADRÓN <span style="float:right;">▼</span></button>
                 <div id="panel-datos-global" class="acordeon-contenido hidden">
             `;
 
@@ -308,7 +315,7 @@
             ies.forEach(ie => {
                 let idIE = 'ie_' + ie.replace(/[^a-zA-Z0-9]/g, '');
                 htmlAcordeon += `
-                    <button class="btn-acordeon ie-btn" onclick="toggleAcordeon('${idIE}')">🏫 ${ie}</button>
+                    <button class="btn-acordeon ie-btn" onclick="toggleAcordeon('${idIE}', this)">🏫 ${ie} <span style="float:right;">▼</span></button>
                     <div id="${idIE}" class="acordeon-contenido hidden">
                 `;
                 
@@ -316,7 +323,7 @@
                 mesas.forEach(mesa => {
                     let idMesa = idIE + '_mesa_' + mesa;
                     htmlAcordeon += `
-                        <button class="btn-acordeon mesa-btn" onclick="toggleAcordeon('${idMesa}', true, '${ie}', '${mesa}')">🗳️ Mesa N° ${mesa}</button>
+                        <button class="btn-acordeon mesa-btn" onclick="toggleAcordeon('${idMesa}', this, '${ie}', '${mesa}')">🗳️ Mesa N° ${mesa} <span style="float:right;">▼</span></button>
                         <div id="${idMesa}" class="acordeon-contenido hidden" style="padding-top:10px;"></div>
                     `;
                 });
@@ -333,17 +340,20 @@
             cambiarPantalla();
         }
 
-        // Lógica de Despliegue y Carga Perezosa (Lazy Rendering)
-        function toggleAcordeon(id, esMesa = false, ieBuscada = '', mesaBuscada = '') {
+        function toggleAcordeon(id, btnElement, ieBuscada = '', mesaBuscada = '') {
             let panel = document.getElementById(id);
+            let flecha = btnElement.querySelector('span'); 
+
             if (panel.classList.contains('hidden')) {
                 panel.classList.remove('hidden');
-                // Si es nivel mesa y está vacío, inyectamos las tarjetas en este exacto momento
-                if (esMesa && panel.innerHTML.trim() === "") {
+                if (flecha) flecha.innerText = '▲'; 
+                
+                if (ieBuscada !== '' && panel.innerHTML.trim() === "") {
                     panel.innerHTML = renderizarTarjetasLazy(ieBuscada, mesaBuscada);
                 }
             } else {
                 panel.classList.add('hidden');
+                if (flecha) flecha.innerText = '▼'; 
             }
         }
 
@@ -462,7 +472,6 @@
             html2pdf().set(opciones).from(elemento).save();
         }
 
-        // Control de Fondos Móviles
         function cambiarPantalla() {
             document.body.classList.remove('login-bg'); 
             document.getElementById('login-view').classList.add('hidden');
