@@ -151,7 +151,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylDafhrRnmaT27dND_EY3usx6Byd82ZLH7jiS3tLD14E-H4S1SSQ5iUTGCyD3iyOr_9A/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwHpxLnBr2_P1IYZ1aFxhGD5wUWdEZUQviUrTRM27BS5aUYfUSu5Y7pZl0fRXWxrcSO3A/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShFcVD-MAHCeuCCteYy-mrnAU7VT9XWMQitmvFt_ZW8F2qssKpCI7upzfr_pJ2hoBZk-5gH4U9BaF-/pub?gid=1997588352&single=true&output=csv';
         const DNI_SETH = '71036931'; 
         const DNI_GOYITA = '70749305'; 
@@ -170,11 +170,14 @@
                 ? `<div class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
                 : `<div class="status-badge">Sin registrar</div>`;
 
-            // AQUI SE APLICA LA SEGURIDAD: Solo los administradores ven las cajas editables y el botón
+            // SEGURIDAD ADMIN CON BOTONES SIMÉTRICOS
             let divContacto = esAdmin 
                 ? `<input type="text" id="dir_${col[1]}" value="${col[6] || ''}" placeholder="Dirección (Editable)" class="admin-input">
                    <input type="text" id="cel_${col[1]}" value="${col[5] || ''}" placeholder="Celular (Editable)" class="admin-input">
-                   <button style="background:var(--celeste-onpe); color:white; border:none; padding:8px; border-radius:5px; width:100%; cursor:pointer; font-weight:bold; margin-top:5px; font-size:12px;" onclick="guardarContacto('${col[1]}')" id="btn_cont_${col[1]}">💾 Guardar Contacto</button>
+                   <div style="display: flex; gap: 8px; margin-top: 5px;">
+                       <button style="flex: 1; background:var(--celeste-onpe); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;" onclick="guardarContacto('${col[1]}')" id="btn_cont_${col[1]}">💾 Guardar</button>
+                       <button style="flex: 1; background:var(--rojo-onpe); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;" onclick="borrarContacto('${col[1]}')" id="btn_del_${col[1]}">🗑️ Borrar</button>
+                   </div>
                    <p id="msg_cont_${col[1]}" style="text-align:center; font-size:11px; font-weight:bold; margin-top:4px;"></p>`
                 : `<h4 style="font-size:13px; text-transform:none;">${col[6] || 'No especificado'}<br>📱 Cel: ${col[5] || 'Sin número'}</h4>`;
 
@@ -449,23 +452,29 @@
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
-        // 6B. GUARDAR SOLO CONTACTO (EXCLUSIVO PARA ADMIN)
+        // 6B. GUARDAR CONTACTO
         function guardarContacto(dniTarget) {
-            const cel = document.getElementById('cel_' + dniTarget).value;
-            const dir = document.getElementById('dir_' + dniTarget).value;
+            let cel = document.getElementById('cel_' + dniTarget).value.trim();
+            let dir = document.getElementById('dir_' + dniTarget).value.trim();
             const msj = document.getElementById('msg_cont_' + dniTarget);
-            const btn = document.getElementById('btn_cont_' + dniTarget);
+            const btnG = document.getElementById('btn_cont_' + dniTarget);
+            const btnD = document.getElementById('btn_del_' + dniTarget);
 
             if(cel === "" && dir === "") {
-                msj.style.color = 'red'; msj.innerText = 'Llene un dato';
+                msj.style.color = 'red'; msj.innerText = 'Use el botón Borrar';
                 return setTimeout(() => { msj.innerText = ''; }, 2000);
             }
 
-            msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; btn.disabled = true;
+            msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; 
+            btnG.disabled = true; btnD.disabled = true;
 
             const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
             let capEnvio = '', obsEnvio = '';
             
+            // Inyectamos un "espacio" si envías un dato vacío para forzar borrado parcial sin tocar Apps Script
+            let celEnvio = cel === "" ? " " : cel; 
+            let dirEnvio = dir === "" ? " " : dir;
+
             if(index !== -1) {
                 let colArray = baseDeDatos[index].split(',');
                 while(colArray.length < 10) colArray.push('');
@@ -477,12 +486,47 @@
                 baseDeDatos[index] = colArray.join(',');
             }
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(cel)}&dir=${encodeURIComponent(dir)}`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(celEnvio)}&dir=${encodeURIComponent(dirEnvio)}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Contacto guardado!'; })
             .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al conectar'; })
-            .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
+            .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
+        }
+
+        // 6C. BORRAR CONTACTO AL INSTANTE
+        function borrarContacto(dniTarget) {
+            document.getElementById('cel_' + dniTarget).value = '';
+            document.getElementById('dir_' + dniTarget).value = '';
+            
+            const msj = document.getElementById('msg_cont_' + dniTarget);
+            const btnG = document.getElementById('btn_cont_' + dniTarget);
+            const btnD = document.getElementById('btn_del_' + dniTarget);
+
+            msj.style.color = 'var(--rojo-onpe)'; msj.innerText = 'Borrando...'; 
+            btnG.disabled = true; btnD.disabled = true;
+
+            const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
+            let capEnvio = '', obsEnvio = '';
+            
+            if(index !== -1) {
+                let colArray = baseDeDatos[index].split(',');
+                while(colArray.length < 10) colArray.push('');
+                capEnvio = colArray[8]; 
+                obsEnvio = colArray[9];
+                
+                colArray[5] = ''; 
+                colArray[6] = '';
+                baseDeDatos[index] = colArray.join(',');
+            }
+
+            // Forzamos el borrado enviando espacios en blanco a tu Apps Script
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(" ")}&dir=${encodeURIComponent(" ")}`;
+
+            fetch(urlEnvio, { mode: 'no-cors' })
+            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Datos borrados!'; })
+            .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al conectar'; })
+            .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
         // 7. DISPARADOR DE PDF
