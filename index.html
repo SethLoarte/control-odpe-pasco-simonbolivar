@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard ONPE - Simón Bolívar</title>
+    <title>ONPE - Simón Bolívar</title>
     <!-- LIBRERÍA PARA GENERAR PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
@@ -16,7 +16,6 @@
         
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--gris-fondo); color: var(--texto-oscuro); min-height: 100vh; overflow-x: hidden; }
         
-        /* Solución Móvil: Fondo adaptativo */
         body.login-bg { 
             background-color: var(--gris-fondo);
             background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); 
@@ -165,20 +164,27 @@
             let estadoActual = col[8] ? col[8].trim() : '';
             let obsActual = col[9] ? col[9].trim() : 'Ninguna';
             
-            // SE AÑADIERON IDs PARA ACTUALIZACIÓN EN TIEMPO REAL
             let badgeHtml = (estadoActual && estadoActual !== "No Capacitado") 
                 ? `<div id="badge_${col[1]}" class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
                 : `<div id="badge_${col[1]}" class="status-badge" style="background:#ffebee; color:var(--rojo-onpe);">Sin registrar</div>`;
 
+            // SE AÑADIÓ EL PANEL DE VISUALIZACIÓN EN TIEMPO REAL PARA EL CONTACTO
+            let dirTexto = (col[6] && col[6].trim() !== "") ? col[6] : 'No especificada';
+            let celTexto = (col[5] && col[5].trim() !== "") ? col[5] : 'Sin número';
+
             let divContacto = esAdmin 
-                ? `<input type="text" id="dir_${col[1]}" value="${col[6] || ''}" placeholder="Dirección (Editable)" class="admin-input">
-                   <input type="text" id="cel_${col[1]}" value="${col[5] || ''}" placeholder="Celular (Editable)" class="admin-input">
+                ? `<div style="font-size:12px; color:#666; margin-bottom:6px; background:#f4f6f9; padding:6px; border-radius:4px;">
+                       <strong>Dir:</strong> <span id="lbl_dir_${col[1]}" style="color:var(--azul-onpe);">${dirTexto}</span><br>
+                       <strong>Cel:</strong> <span id="lbl_cel_${col[1]}" style="color:var(--azul-onpe);">${celTexto}</span>
+                   </div>
+                   <input type="text" id="dir_${col[1]}" value="${col[6] && col[6].trim() !== "" ? col[6] : ''}" placeholder="Dirección (Editable)" class="admin-input">
+                   <input type="text" id="cel_${col[1]}" value="${col[5] && col[5].trim() !== "" ? col[5] : ''}" placeholder="Celular (Editable)" class="admin-input">
                    <div style="display: flex; gap: 8px; margin-top: 5px;">
                        <button style="flex: 1; background:var(--celeste-onpe); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;" onclick="guardarContacto('${col[1]}')" id="btn_cont_${col[1]}">💾 Guardar</button>
                        <button style="flex: 1; background:var(--rojo-onpe); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;" onclick="borrarContacto('${col[1]}')" id="btn_del_${col[1]}">🗑️ Borrar</button>
                    </div>
                    <p id="msg_cont_${col[1]}" style="text-align:center; font-size:11px; font-weight:bold; margin-top:4px;"></p>`
-                : `<h4 style="font-size:13px; text-transform:none;">${col[6] || 'No especificado'}<br>📱 Cel: ${col[5] || 'Sin número'}</h4>`;
+                : `<h4 style="font-size:13px; text-transform:none;">${col[6] || 'No especificada'}<br>📱 Cel: ${col[5] || 'Sin número'}</h4>`;
 
             return `
             <div class="onpe-dashboard">
@@ -409,7 +415,6 @@
             };
         }
 
-        // --- FUNCIÓN ACTUALIZADA CON RENDERIZADO DOM EN TIEMPO REAL ---
         function guardar(dniTarget) {
             const selectCap = document.getElementById('cap_' + dniTarget);
             const cap = selectCap.value;
@@ -437,7 +442,6 @@
                 if(obs !== "") colArray[9] = obs;
                 baseDeDatos[index] = colArray.join(',');
 
-                // ACTUALIZACIÓN VISUAL DEL DOM EN TIEMPO REAL
                 let badgeDOM = document.getElementById('badge_' + dniTarget);
                 let obsDOM = document.getElementById('obs_text_' + dniTarget);
                 
@@ -470,6 +474,7 @@
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
+        // --- MANIPULACIÓN DEL DOM PARA CONTACTOS EN TIEMPO REAL ---
         function guardarContacto(dniTarget) {
             let cel = document.getElementById('cel_' + dniTarget).value.trim();
             let dir = document.getElementById('dir_' + dniTarget).value.trim();
@@ -495,6 +500,10 @@
                 colArray[5] = celEnvio; 
                 colArray[6] = dirEnvio;
                 baseDeDatos[index] = colArray.join(',');
+
+                // Actualizamos las etiquetas visuales (Feedback Inmediato)
+                document.getElementById('lbl_cel_' + dniTarget).innerText = cel === "" ? 'Sin número' : cel;
+                document.getElementById('lbl_dir_' + dniTarget).innerText = dir === "" ? 'No especificada' : dir;
             }
 
             const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(celEnvio)}&dir=${encodeURIComponent(dirEnvio)}`;
@@ -528,6 +537,10 @@
                 colArray[5] = ' '; 
                 colArray[6] = ' ';
                 baseDeDatos[index] = colArray.join(',');
+
+                // Actualizamos las etiquetas visuales (Feedback Inmediato)
+                document.getElementById('lbl_cel_' + dniTarget).innerText = 'Sin número';
+                document.getElementById('lbl_dir_' + dniTarget).innerText = 'No especificada';
             }
 
             const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(" ")}&dir=${encodeURIComponent(" ")}`;
