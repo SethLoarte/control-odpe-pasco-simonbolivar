@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
-    <!-- LIBRERÍA PARA GENERAR PDF -->
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -33,14 +32,22 @@
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--blanco); z-index: 9999; display: flex; align-items: center; justify-content: center; }
         #loading-screen img { width: 300px; max-width: 80vw; }
 
-        /* --- VISTA INICIO --- */
+        /* --- VISTA INICIO Y FORMULARIO --- */
         #login-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         .login-card { background: var(--blanco); padding: 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); width: min(100%, 420px); text-align: center; }
         .login-card img { max-width: 80%; max-height: 60px; margin-bottom: 15px; }
         .login-card h2 { color: var(--azul-onpe); font-size: 20px; margin-bottom: 5px; }
         .login-card h3 { color: var(--rojo-onpe); font-size: 16px; margin-bottom: 20px; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; outline: none; margin-bottom: 15px; }
-        .btn-consultar { width: 100%; background-color: #757575; color: var(--blanco); border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        
+        /* Ajustes visuales del input (Borde rojo y sin flechas) */
+        .input-group input { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; outline: none; margin-bottom: 15px; transition: border-color 0.3s; }
+        .input-group input:focus { border-color: var(--rojo-onpe); }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        /* Ajustes del botón (Cambio de color dinámico) */
+        .btn-consultar { width: 100%; background-color: #757575; color: var(--blanco); border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background-color 0.3s; }
+        .btn-consultar.listo { background-color: var(--rojo-onpe); }
 
         /* --- NAVBAR Y LAYOUT --- */
         .navbar { background: var(--blanco); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px; }
@@ -107,7 +114,6 @@
 </head>
 <body class="login-bg">
 
-    <!-- OVERLAY DE CARGA -->
     <div id="loading-screen" class="hidden">
         <img src="https://consultaelectoral.onpe.gob.pe/assets/loading/loading.svg" alt="Cargando...">
     </div>
@@ -183,6 +189,21 @@
         let baseDeDatos = []; 
         let usuarioActual = ''; 
         let intervaloReloj;
+
+        // ACTIVACIÓN DINÁMICA DEL BOTÓN CONSULTAR
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputBusq = document.getElementById('inputBusqueda');
+            const btnBusq = document.getElementById('btnConsultarPrincipal');
+            
+            inputBusq.addEventListener('input', function() {
+                // El botón se enciende si se digitan 8 números (DNI) o 6 (Mesa)
+                if (this.value.length === 8 || this.value.length === 6) {
+                    btnBusq.classList.add('listo');
+                } else {
+                    btnBusq.classList.remove('listo');
+                }
+            });
+        });
 
         window.onload = () => {
             let fin = sessionStorage.getItem('sesionFin');
@@ -675,7 +696,10 @@
             document.body.classList.remove('login-bg'); 
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
+            
+            // Limpiamos los campos y apagamos el botón de la vista login al entrar
             document.getElementById('inputBusqueda').value = '';
+            document.getElementById('btnConsultarPrincipal').classList.remove('listo');
             document.getElementById('mensaje-login').innerText = '';
         }
 
@@ -688,6 +712,11 @@
             document.body.classList.add('login-bg'); 
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
+            
+            // Limpiamos los campos y apagamos el botón al salir
+            document.getElementById('inputBusqueda').value = '';
+            document.getElementById('btnConsultarPrincipal').classList.remove('listo');
+            
             usuarioActual = ''; baseDeDatos = [];
         }
     </script>
