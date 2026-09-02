@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <!-- LIBRERÍA PARA GENERAR PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
@@ -75,7 +75,7 @@
         .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-bottom: 8px; background: #ffebee; color: var(--rojo-onpe); }
         .form-area select, .form-area input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
-        .admin-input { border: 1px dashed var(--celeste-onpe) !important; background: #f0f7ff !important; font-size: 13px !important; padding: 6px !important; }
+        .admin-input { border: 1px dashed var(--celeste-onpe) !important; background: #f0f7ff !important; font-size: 13px !important; padding: 6px !important; margin-bottom: 5px !important; }
 
         /* --- RESPONSIVE DESIGN (SOLUCIÓN MÓVIL) --- */
         @media (max-width: 768px) {
@@ -170,9 +170,12 @@
                 ? `<div class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
                 : `<div class="status-badge">Sin registrar</div>`;
 
+            // AQUI SE APLICA LA SEGURIDAD: Solo los administradores ven las cajas editables y el botón
             let divContacto = esAdmin 
                 ? `<input type="text" id="dir_${col[1]}" value="${col[6] || ''}" placeholder="Dirección (Editable)" class="admin-input">
-                   <input type="text" id="cel_${col[1]}" value="${col[5] || ''}" placeholder="Celular (Editable)" class="admin-input">`
+                   <input type="text" id="cel_${col[1]}" value="${col[5] || ''}" placeholder="Celular (Editable)" class="admin-input">
+                   <button style="background:var(--celeste-onpe); color:white; border:none; padding:8px; border-radius:5px; width:100%; cursor:pointer; font-weight:bold; margin-top:5px; font-size:12px;" onclick="guardarContacto('${col[1]}')" id="btn_cont_${col[1]}">💾 Guardar Contacto</button>
+                   <p id="msg_cont_${col[1]}" style="text-align:center; font-size:11px; font-weight:bold; margin-top:4px;"></p>`
                 : `<h4 style="font-size:13px; text-transform:none;">${col[6] || 'No especificado'}<br>📱 Cel: ${col[5] || 'Sin número'}</h4>`;
 
             return `
@@ -284,7 +287,7 @@
             }
         }
 
-        // 4. VISTA ADMINISTRADOR: ACORDEONES ANIDADOS, FLECHAS Y CARGA DIFERIDA
+        // 4. VISTA ADMINISTRADOR: ACORDEONES ANIDADOS Y FLECHAS
         function prepararPanelAdmin() {
             let datosAgrupados = {};
             
@@ -408,41 +411,77 @@
             };
         }
 
-        // 6. GUARDAR
+        // 6A. GUARDAR DATOS DE CAPACITACIÓN Y ESTADO
         function guardar(dniTarget) {
-            const cap = document.getElementById('cap_' + dniTarget).value;
+            const selectCap = document.getElementById('cap_' + dniTarget);
+            const cap = selectCap.value;
             const obs = document.getElementById('obs_' + dniTarget).value;
             const msj = document.getElementById('msg_' + dniTarget);
             const btn = document.getElementById('btn_' + dniTarget);
             
-            let cel = '', dir = '';
-            const esAdmin = (usuarioActual === 'SETH' || usuarioActual === 'GOYITA');
-            if(esAdmin) {
-                cel = document.getElementById('cel_' + dniTarget) ? document.getElementById('cel_' + dniTarget).value : '';
-                dir = document.getElementById('dir_' + dniTarget) ? document.getElementById('dir_' + dniTarget).value : '';
+            if(cap === "" && obs === "") {
+                msj.style.color = 'red'; msj.innerText = 'No ingresaste datos.';
+                return setTimeout(() => { msj.innerText = ''; }, 2500);
             }
 
             msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; btn.disabled = true;
 
-            if(cap !== "") {
-                const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
-                if(index !== -1) {
-                    let colArray = baseDeDatos[index].split(',');
-                    while(colArray.length < 10) colArray.push('');
-                    
-                    colArray[8] = cap; 
-                    colArray[9] = obs !== "" ? obs : colArray[9];
-                    if(esAdmin) { colArray[5] = cel; colArray[6] = dir; }
-                    baseDeDatos[index] = colArray.join(',');
-                }
-                actualizarGraficosCirculares(); 
+            let capEnvio = cap;
+            const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
+            if(index !== -1) {
+                let colArray = baseDeDatos[index].split(',');
+                while(colArray.length < 10) colArray.push('');
+                
+                if(cap === "") capEnvio = colArray[8]; 
+                else colArray[8] = cap; 
+                
+                if(obs !== "") colArray[9] = obs;
+                baseDeDatos[index] = colArray.join(',');
             }
+            actualizarGraficosCirculares(); 
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(cap)}&obs=${encodeURIComponent(obs)}&cel=${encodeURIComponent(cel)}&dir=${encodeURIComponent(dir)}`;
+            // Se envía sin alterar el celular/dirección (esos van en blanco para que el GS los ignore)
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obs)}&cel=&dir=`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
-            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Actualizado con éxito!'; })
+            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Actualizado con éxito!'; selectCap.value = ''; })
             .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al guardar.'; })
+            .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
+        }
+
+        // 6B. GUARDAR SOLO CONTACTO (EXCLUSIVO PARA ADMIN)
+        function guardarContacto(dniTarget) {
+            const cel = document.getElementById('cel_' + dniTarget).value;
+            const dir = document.getElementById('dir_' + dniTarget).value;
+            const msj = document.getElementById('msg_cont_' + dniTarget);
+            const btn = document.getElementById('btn_cont_' + dniTarget);
+
+            if(cel === "" && dir === "") {
+                msj.style.color = 'red'; msj.innerText = 'Llene un dato';
+                return setTimeout(() => { msj.innerText = ''; }, 2000);
+            }
+
+            msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; btn.disabled = true;
+
+            const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
+            let capEnvio = '', obsEnvio = '';
+            
+            if(index !== -1) {
+                let colArray = baseDeDatos[index].split(',');
+                while(colArray.length < 10) colArray.push('');
+                capEnvio = colArray[8]; 
+                obsEnvio = colArray[9];
+                
+                colArray[5] = cel; 
+                colArray[6] = dir;
+                baseDeDatos[index] = colArray.join(',');
+            }
+
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(cel)}&dir=${encodeURIComponent(dir)}`;
+
+            fetch(urlEnvio, { mode: 'no-cors' })
+            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Contacto guardado!'; })
+            .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al conectar'; })
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
