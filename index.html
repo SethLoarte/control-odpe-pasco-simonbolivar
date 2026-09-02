@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
-    <!-- LIBRERÍA PARA GENERAR PDF -->
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -60,8 +59,18 @@
         .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; }
         .acordeon-contenido { margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease; }
         
+        /* --- CARRUSEL HORIZONTAL (NUEVO) --- */
+        .carousel-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+        .carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; gap: 15px; padding: 10px 0; scrollbar-width: none; -ms-overflow-style: none; }
+        .carousel-track::-webkit-scrollbar { display: none; }
+        .miembro-slide { flex: 0 0 100%; scroll-snap-align: center; }
+        .carousel-btn { position: absolute; z-index: 10; background: var(--blanco); color: var(--azul-onpe); border: none; font-size: 20px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s ease; top: 50%; transform: translateY(-50%); }
+        .carousel-btn:active { transform: translateY(-50%) scale(0.9); }
+        .left-btn { left: -10px; }
+        .right-btn { right: -10px; }
+
         /* --- TARJETAS DE MIEMBROS --- */
-        .onpe-dashboard { margin-bottom: 20px; }
+        .onpe-dashboard { /* Modificado para adaptarse al carrusel */ }
         .top-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .top-card { background: var(--blanco); border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
         .cargo-card { background: var(--rojo-onpe); color: var(--blanco); justify-content: center; text-align: center; flex-direction: column; gap: 4px; }
@@ -83,6 +92,9 @@
             .btn-acordeon.ie-btn { margin-left: 0; width: 100%; }
             .btn-acordeon.mesa-btn { margin-left: 10px; width: calc(100% - 10px); }
             .login-card { padding: 20px; }
+            /* Ajuste extra de botones en celular para que no tapen la tarjeta */
+            .left-btn { left: -5px; width: 35px; height: 35px; }
+            .right-btn { right: -5px; width: 35px; height: 35px; }
         }
     </style>
 </head>
@@ -157,6 +169,26 @@
         let baseDeDatos = []; 
         let usuarioActual = ''; 
 
+        // --- ENVOLTORIO DE CARRUSEL ---
+        function wrapInCarousel(htmlContent, idUnico) {
+            return `
+            <div class="carousel-wrapper">
+                <button class="carousel-btn left-btn" onclick="moverCarrusel('${idUnico}', -1)">❮</button>
+                <div class="carousel-track" id="track_${idUnico}">
+                    ${htmlContent}
+                </div>
+                <button class="carousel-btn right-btn" onclick="moverCarrusel('${idUnico}', 1)">❯</button>
+            </div>
+            `;
+        }
+
+        // Lógica de movimiento de las flechas
+        function moverCarrusel(id, direccion) {
+            const track = document.getElementById('track_' + id);
+            const scrollAmount = track.offsetWidth; 
+            track.scrollBy({ left: direccion * scrollAmount, behavior: 'smooth' });
+        }
+
         function generarTarjetaHTML(filaStr, esAdmin) {
             const col = filaStr.split(',');
             if(col.length < 8 || !col[1]) return '';
@@ -168,7 +200,6 @@
                 ? `<div id="badge_${col[1]}" class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
                 : `<div id="badge_${col[1]}" class="status-badge" style="background:#ffebee; color:var(--rojo-onpe);">Sin registrar</div>`;
 
-            // SE AÑADIÓ EL PANEL DE VISUALIZACIÓN EN TIEMPO REAL PARA EL CONTACTO
             let dirTexto = (col[6] && col[6].trim() !== "") ? col[6] : 'No especificada';
             let celTexto = (col[5] && col[5].trim() !== "") ? col[5] : 'Sin número';
 
@@ -186,59 +217,61 @@
                    <p id="msg_cont_${col[1]}" style="text-align:center; font-size:11px; font-weight:bold; margin-top:4px;"></p>`
                 : `<h4 style="font-size:13px; text-transform:none;">${col[6] || 'No especificada'}<br>📱 Cel: ${col[5] || 'Sin número'}</h4>`;
 
+            // La tarjeta ahora nace con la clase miembro-slide para acoplarse al carrusel (y se quitó la etiqueta <hr>)
             return `
-            <div class="onpe-dashboard">
-                <div class="top-cards">
-                    <div class="top-card cargo-card">
-                        <span>MIEMBRO DE MESA</span>
-                        <h4 style="font-size:16px;">${col[4] || ''}</h4>
-                    </div>
-                    <div class="top-card">
-                        <div class="icon-circle">👤</div>
-                        <div class="card-data">
-                            <p>DNI: ${col[1]}</p>
-                            <h4>${col[2] || ''} ${col[3] || ''}</h4>
+            <div class="miembro-slide">
+                <div class="onpe-dashboard">
+                    <div class="top-cards">
+                        <div class="top-card cargo-card">
+                            <span>MIEMBRO DE MESA</span>
+                            <h4 style="font-size:16px;">${col[4] || ''}</h4>
+                        </div>
+                        <div class="top-card">
+                            <div class="icon-circle">👤</div>
+                            <div class="card-data">
+                                <p>DNI: ${col[1]}</p>
+                                <h4>${col[2] || ''} ${col[3] || ''}</h4>
+                            </div>
+                        </div>
+                        <div class="top-card">
+                            <div class="icon-circle">📍</div>
+                            <div class="card-data" style="width:100%;">
+                                <p>Domicilio / Contacto</p>
+                                ${divContacto}
+                            </div>
                         </div>
                     </div>
-                    <div class="top-card">
-                        <div class="icon-circle">📍</div>
-                        <div class="card-data" style="width:100%;">
-                            <p>Domicilio / Contacto</p>
-                            ${divContacto}
+                    <div class="middle-section">
+                        <div class="main-card">
+                            <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Capacitación</h3>
+                            <div class="form-area">
+                                ${badgeHtml}
+                                <div id="obs_text_${col[1]}" style="font-size:11px; color:#666; margin-bottom:8px;">Obs. actuales: ${obsActual}</div>
+                                <select id="cap_${col[1]}">
+                                    <option value="">Actualizar estado a...</option>
+                                    <option value="1ra Jornada">1ra Jornada</option>
+                                    <option value="2da Jornada">2da Jornada</option>
+                                    <option value="Personalizada - Local">Personalizada - Local</option>
+                                    <option value="Personalizada - Domicilio">Personalizada - Domicilio</option>
+                                    <option value="Virtual">Virtual</option>
+                                    <option value="No Capacitado">No Capacitado</option>
+                                </select>
+                                <input type="text" id="obs_${col[1]}" placeholder="Añadir observación nueva...">
+                                <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar Datos</button>
+                                <p id="msg_${col[1]}" style="text-align:center; font-size:12px; font-weight:bold; margin-top:8px;"></p>
+                            </div>
+                        </div>
+                        <div class="main-card">
+                            <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Localización</h3>
+                            <div style="background:#f4f6f9; border-radius:8px; padding:12px; text-align:center;">
+                                <strong style="font-size:13px; display:block; margin-bottom:8px;">${col[7] || ''}</strong>
+                                <span style="color:#666; font-size:11px;">● N° de Mesa:</span>
+                                <h4 style="color:var(--celeste-onpe); font-size:22px;">${col[0] || ''}</h4>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="middle-section">
-                    <div class="main-card">
-                        <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Capacitación</h3>
-                        <div class="form-area">
-                            ${badgeHtml}
-                            <div id="obs_text_${col[1]}" style="font-size:11px; color:#666; margin-bottom:8px;">Obs. actuales: ${obsActual}</div>
-                            <select id="cap_${col[1]}">
-                                <option value="">Actualizar estado a...</option>
-                                <option value="1ra Jornada">1ra Jornada</option>
-                                <option value="2da Jornada">2da Jornada</option>
-                                <option value="Personalizada - Local">Personalizada - Local</option>
-                                <option value="Personalizada - Domicilio">Personalizada - Domicilio</option>
-                                <option value="Virtual">Virtual</option>
-                                <option value="No Capacitado">No Capacitado</option>
-                            </select>
-                            <input type="text" id="obs_${col[1]}" placeholder="Añadir observación nueva...">
-                            <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar Datos</button>
-                            <p id="msg_${col[1]}" style="text-align:center; font-size:12px; font-weight:bold; margin-top:8px;"></p>
-                        </div>
-                    </div>
-                    <div class="main-card">
-                        <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Localización</h3>
-                        <div style="background:#f4f6f9; border-radius:8px; padding:12px; text-align:center;">
-                            <strong style="font-size:13px; display:block; margin-bottom:8px;">${col[7] || ''}</strong>
-                            <span style="color:#666; font-size:11px;">● N° de Mesa:</span>
-                            <h4 style="color:var(--celeste-onpe); font-size:22px;">${col[0] || ''}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <hr style="border: 0; border-top: 2px dashed #ccc; margin: 25px 0;">`;
+            </div>`;
         }
 
         async function consultar() {
@@ -284,7 +317,9 @@
             });
 
             if(htmlTarjetas !== '') {
-                document.getElementById('contenedor-resultados').innerHTML = htmlTarjetas;
+                // Si buscan por Mesa, lo envolvemos en el carrusel automáticamente
+                let finalHtml = esDni ? htmlTarjetas : wrapInCarousel(htmlTarjetas, 'busq_' + valor);
+                document.getElementById('contenedor-resultados').innerHTML = finalHtml;
                 document.getElementById('admin-graficos').classList.add('hidden');
                 cambiarPantalla();
             } else {
@@ -377,7 +412,7 @@
                     }
                 }
             });
-            return html;
+            return wrapInCarousel(html, 'lazy_' + mesaBuscada);
         }
 
         function actualizarGraficosCirculares() {
@@ -474,7 +509,6 @@
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
-        // --- MANIPULACIÓN DEL DOM PARA CONTACTOS EN TIEMPO REAL ---
         function guardarContacto(dniTarget) {
             let cel = document.getElementById('cel_' + dniTarget).value.trim();
             let dir = document.getElementById('dir_' + dniTarget).value.trim();
@@ -501,7 +535,6 @@
                 colArray[6] = dirEnvio;
                 baseDeDatos[index] = colArray.join(',');
 
-                // Actualizamos las etiquetas visuales (Feedback Inmediato)
                 document.getElementById('lbl_cel_' + dniTarget).innerText = cel === "" ? 'Sin número' : cel;
                 document.getElementById('lbl_dir_' + dniTarget).innerText = dir === "" ? 'No especificada' : dir;
             }
@@ -538,7 +571,6 @@
                 colArray[6] = ' ';
                 baseDeDatos[index] = colArray.join(',');
 
-                // Actualizamos las etiquetas visuales (Feedback Inmediato)
                 document.getElementById('lbl_cel_' + dniTarget).innerText = 'Sin número';
                 document.getElementById('lbl_dir_' + dniTarget).innerText = 'No especificada';
             }
