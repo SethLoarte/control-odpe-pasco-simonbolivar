@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard ONPE - Simón Bolívar</title>
+    <title>ONPE - Simón Bolívar</title>
+    <!-- LIBRERÍA PARA GENERAR PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -28,10 +29,9 @@
         .hidden { display: none !important; }
         .pdf-offscreen { position: absolute; left: -9999px; top: 0; }
 
-        /* --- PANTALLA DE CARGA (NUEVO) --- */
-        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--blanco); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #loading-screen img { width: 120px; }
-        #loading-screen p { color: var(--azul-onpe); font-weight: bold; margin-top: 15px; font-size: 14px; }
+        /* --- PANTALLA DE CARGA --- */
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--blanco); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        #loading-screen img { width: 300px; max-width: 80vw; }
 
         /* --- VISTA INICIO --- */
         #login-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
@@ -107,9 +107,9 @@
 </head>
 <body class="login-bg">
 
+    <!-- OVERLAY DE CARGA -->
     <div id="loading-screen" class="hidden">
         <img src="https://consultaelectoral.onpe.gob.pe/assets/loading/loading.svg" alt="Cargando...">
-        <p>Conectando con la base de datos...</p>
     </div>
 
     <div id="login-view">
@@ -184,12 +184,10 @@
         let usuarioActual = ''; 
         let intervaloReloj;
 
-        // AUTO-LOGIN CON CARGA VISUAL INMEDIATA
         window.onload = () => {
             let fin = sessionStorage.getItem('sesionFin');
             let ultima = sessionStorage.getItem('ultimaBusqueda');
             if (fin && Date.now() < fin && ultima) {
-                // Interceptamos la vista antes de dibujar el login
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('loading-screen').classList.remove('hidden');
                 
@@ -335,7 +333,6 @@
             
             if(valor === '') return;
             
-            // Mostrar pantalla de carga
             document.getElementById('loading-screen').classList.remove('hidden');
             if(!esAutoLogin) msj.innerText = '';
             
@@ -358,7 +355,6 @@
                 }
                 iniciarReloj(valor);
             } catch(e) {
-                // Si falla el internet, retiramos el logo y mostramos error
                 document.getElementById('loading-screen').classList.add('hidden');
                 if(esAutoLogin) document.getElementById('login-view').classList.remove('hidden');
                 msj.style.color = 'red'; msj.innerText = "Error de conexión.";
@@ -675,7 +671,6 @@
         }
 
         function cambiarPantalla() {
-            // Ocultamos la pantalla de carga y mostramos el dashboard
             document.getElementById('loading-screen').classList.add('hidden');
             document.body.classList.remove('login-bg'); 
             document.getElementById('login-view').classList.add('hidden');
