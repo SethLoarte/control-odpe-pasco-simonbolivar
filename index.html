@@ -16,7 +16,6 @@
         
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--gris-fondo); color: var(--texto-oscuro); min-height: 100vh; overflow-x: hidden; }
         
-        /* Solución Móvil: Fondo adaptativo */
         body.login-bg { 
             background-color: var(--gris-fondo);
             background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); 
@@ -77,7 +76,6 @@
         .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
         .admin-input { border: 1px dashed var(--celeste-onpe) !important; background: #f0f7ff !important; font-size: 13px !important; padding: 6px !important; margin-bottom: 5px !important; }
 
-        /* --- RESPONSIVE DESIGN (SOLUCIÓN MÓVIL) --- */
         @media (max-width: 768px) {
             .graficos-container { flex-direction: column; }
             .middle-section { grid-template-columns: 1fr; }
@@ -159,7 +157,6 @@
         let baseDeDatos = []; 
         let usuarioActual = ''; 
 
-        // 1. GENERADOR DE TARJETAS
         function generarTarjetaHTML(filaStr, esAdmin) {
             const col = filaStr.split(',');
             if(col.length < 8 || !col[1]) return '';
@@ -170,7 +167,6 @@
                 ? `<div class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
                 : `<div class="status-badge">Sin registrar</div>`;
 
-            // SEGURIDAD ADMIN CON BOTONES SIMÉTRICOS
             let divContacto = esAdmin 
                 ? `<input type="text" id="dir_${col[1]}" value="${col[6] || ''}" placeholder="Dirección (Editable)" class="admin-input">
                    <input type="text" id="cel_${col[1]}" value="${col[5] || ''}" placeholder="Celular (Editable)" class="admin-input">
@@ -236,7 +232,6 @@
             <hr style="border: 0; border-top: 2px dashed #ccc; margin: 25px 0;">`;
         }
 
-        // 2. MOTOR PRINCIPAL
         async function consultar() {
             const valor = document.getElementById('inputBusqueda').value.trim();
             const msj = document.getElementById('mensaje-login');
@@ -266,7 +261,6 @@
             }
         }
 
-        // 3. VISTA PARA CM / RLV
         function mostrarBusquedaNormal(valor) {
             let htmlTarjetas = '';
             const esDni = valor.length === 8;
@@ -290,7 +284,6 @@
             }
         }
 
-        // 4. VISTA ADMINISTRADOR: ACORDEONES ANIDADOS Y FLECHAS
         function prepararPanelAdmin() {
             let datosAgrupados = {};
             
@@ -378,7 +371,6 @@
             return html;
         }
 
-        // 5. CÁLCULO Y ANIMACIÓN REACTIVA
         function actualizarGraficosCirculares() {
             let sanAndresTotal = 0, sanAndresCap = 0;
             let restoTotal = 0, restoCap = 0;
@@ -414,7 +406,6 @@
             };
         }
 
-        // 6A. GUARDAR DATOS DE CAPACITACIÓN Y ESTADO
         function guardar(dniTarget) {
             const selectCap = document.getElementById('cap_' + dniTarget);
             const cap = selectCap.value;
@@ -443,7 +434,6 @@
             }
             actualizarGraficosCirculares(); 
 
-            // Se envía sin alterar el celular/dirección (esos van en blanco para que el GS los ignore)
             const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obs)}&cel=&dir=`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
@@ -452,7 +442,7 @@
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
-        // 6B. GUARDAR CONTACTO
+        // 6B. GUARDAR CONTACTO (Libre de restricciones)
         function guardarContacto(dniTarget) {
             let cel = document.getElementById('cel_' + dniTarget).value.trim();
             let dir = document.getElementById('dir_' + dniTarget).value.trim();
@@ -460,20 +450,11 @@
             const btnG = document.getElementById('btn_cont_' + dniTarget);
             const btnD = document.getElementById('btn_del_' + dniTarget);
 
-            if(cel === "" && dir === "") {
-                msj.style.color = 'red'; msj.innerText = 'Use el botón Borrar';
-                return setTimeout(() => { msj.innerText = ''; }, 2000);
-            }
-
             msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; 
             btnG.disabled = true; btnD.disabled = true;
 
             const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
             let capEnvio = '', obsEnvio = '';
-            
-            // Inyectamos un "espacio" si envías un dato vacío para forzar borrado parcial sin tocar Apps Script
-            let celEnvio = cel === "" ? " " : cel; 
-            let dirEnvio = dir === "" ? " " : dir;
 
             if(index !== -1) {
                 let colArray = baseDeDatos[index].split(',');
@@ -486,7 +467,7 @@
                 baseDeDatos[index] = colArray.join(',');
             }
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(celEnvio)}&dir=${encodeURIComponent(dirEnvio)}`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(cel)}&dir=${encodeURIComponent(dir)}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Contacto guardado!'; })
@@ -494,7 +475,7 @@
             .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
-        // 6C. BORRAR CONTACTO AL INSTANTE
+        // 6C. BORRAR CONTACTO DIRECTO
         function borrarContacto(dniTarget) {
             document.getElementById('cel_' + dniTarget).value = '';
             document.getElementById('dir_' + dniTarget).value = '';
@@ -520,8 +501,7 @@
                 baseDeDatos[index] = colArray.join(',');
             }
 
-            // Forzamos el borrado enviando espacios en blanco a tu Apps Script
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(" ")}&dir=${encodeURIComponent(" ")}`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent("")}&dir=${encodeURIComponent("")}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Datos borrados!'; })
@@ -529,7 +509,6 @@
             .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
-        // 7. DISPARADOR DE PDF
         function dispararPDF(tipo) {
             if(tipo === 'SETH') {
                 descargarReporteDiario(window.metricas.sanAndres.cap, window.metricas.sanAndres.total, 'CENTRO POBLADO PARAGSHA');
