@@ -16,6 +16,7 @@
         
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--gris-fondo); color: var(--texto-oscuro); min-height: 100vh; overflow-x: hidden; }
         
+        /* Solución Móvil: Fondo adaptativo */
         body.login-bg { 
             background-color: var(--gris-fondo);
             background-image: url('https://consultaelectoral.onpe.gob.pe/assets/img/fondos/fondo03.svg'); 
@@ -76,6 +77,7 @@
         .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
         .admin-input { border: 1px dashed var(--celeste-onpe) !important; background: #f0f7ff !important; font-size: 13px !important; padding: 6px !important; margin-bottom: 5px !important; }
 
+        /* --- RESPONSIVE DESIGN (SOLUCIÓN MÓVIL) --- */
         @media (max-width: 768px) {
             .graficos-container { flex-direction: column; }
             .middle-section { grid-template-columns: 1fr; }
@@ -442,7 +444,6 @@
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
-        // 6B. GUARDAR CONTACTO (Libre de restricciones)
         function guardarContacto(dniTarget) {
             let cel = document.getElementById('cel_' + dniTarget).value.trim();
             let dir = document.getElementById('dir_' + dniTarget).value.trim();
@@ -456,18 +457,21 @@
             const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
             let capEnvio = '', obsEnvio = '';
 
+            let celEnvio = cel === "" ? " " : cel; 
+            let dirEnvio = dir === "" ? " " : dir;
+
             if(index !== -1) {
                 let colArray = baseDeDatos[index].split(',');
                 while(colArray.length < 10) colArray.push('');
                 capEnvio = colArray[8]; 
                 obsEnvio = colArray[9];
                 
-                colArray[5] = cel; 
-                colArray[6] = dir;
+                colArray[5] = celEnvio; 
+                colArray[6] = dirEnvio;
                 baseDeDatos[index] = colArray.join(',');
             }
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(cel)}&dir=${encodeURIComponent(dir)}`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(celEnvio)}&dir=${encodeURIComponent(dirEnvio)}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Contacto guardado!'; })
@@ -475,7 +479,6 @@
             .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
 
-        // 6C. BORRAR CONTACTO DIRECTO
         function borrarContacto(dniTarget) {
             document.getElementById('cel_' + dniTarget).value = '';
             document.getElementById('dir_' + dniTarget).value = '';
@@ -496,12 +499,12 @@
                 capEnvio = colArray[8]; 
                 obsEnvio = colArray[9];
                 
-                colArray[5] = ''; 
-                colArray[6] = '';
+                colArray[5] = ' '; 
+                colArray[6] = ' ';
                 baseDeDatos[index] = colArray.join(',');
             }
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent("")}&dir=${encodeURIComponent("")}`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(" ")}&dir=${encodeURIComponent(" ")}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Datos borrados!'; })
