@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <!-- LIBRERÍA PARA GENERAR PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
@@ -77,7 +77,6 @@
         .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
         .admin-input { border: 1px dashed var(--celeste-onpe) !important; background: #f0f7ff !important; font-size: 13px !important; padding: 6px !important; margin-bottom: 5px !important; }
 
-        /* --- RESPONSIVE DESIGN (SOLUCIÓN MÓVIL) --- */
         @media (max-width: 768px) {
             .graficos-container { flex-direction: column; }
             .middle-section { grid-template-columns: 1fr; }
@@ -165,9 +164,11 @@
 
             let estadoActual = col[8] ? col[8].trim() : '';
             let obsActual = col[9] ? col[9].trim() : 'Ninguna';
+            
+            // SE AÑADIERON IDs PARA ACTUALIZACIÓN EN TIEMPO REAL
             let badgeHtml = (estadoActual && estadoActual !== "No Capacitado") 
-                ? `<div class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
-                : `<div class="status-badge">Sin registrar</div>`;
+                ? `<div id="badge_${col[1]}" class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
+                : `<div id="badge_${col[1]}" class="status-badge" style="background:#ffebee; color:var(--rojo-onpe);">Sin registrar</div>`;
 
             let divContacto = esAdmin 
                 ? `<input type="text" id="dir_${col[1]}" value="${col[6] || ''}" placeholder="Dirección (Editable)" class="admin-input">
@@ -206,7 +207,7 @@
                         <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Capacitación</h3>
                         <div class="form-area">
                             ${badgeHtml}
-                            <div style="font-size:11px; color:#666; margin-bottom:8px;">Obs. actuales: ${obsActual}</div>
+                            <div id="obs_text_${col[1]}" style="font-size:11px; color:#666; margin-bottom:8px;">Obs. actuales: ${obsActual}</div>
                             <select id="cap_${col[1]}">
                                 <option value="">Actualizar estado a...</option>
                                 <option value="1ra Jornada">1ra Jornada</option>
@@ -408,6 +409,7 @@
             };
         }
 
+        // --- FUNCIÓN ACTUALIZADA CON RENDERIZADO DOM EN TIEMPO REAL ---
         function guardar(dniTarget) {
             const selectCap = document.getElementById('cap_' + dniTarget);
             const cap = selectCap.value;
@@ -424,6 +426,7 @@
 
             let capEnvio = cap;
             const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
+            
             if(index !== -1) {
                 let colArray = baseDeDatos[index].split(',');
                 while(colArray.length < 10) colArray.push('');
@@ -433,13 +436,36 @@
                 
                 if(obs !== "") colArray[9] = obs;
                 baseDeDatos[index] = colArray.join(',');
+
+                // ACTUALIZACIÓN VISUAL DEL DOM EN TIEMPO REAL
+                let badgeDOM = document.getElementById('badge_' + dniTarget);
+                let obsDOM = document.getElementById('obs_text_' + dniTarget);
+                
+                if (capEnvio && capEnvio !== "No Capacitado") {
+                    badgeDOM.style.background = '#e8f5e9';
+                    badgeDOM.style.color = '#2e7d32';
+                    badgeDOM.innerText = 'Registrado: ' + capEnvio;
+                } else {
+                    badgeDOM.style.background = '#ffebee';
+                    badgeDOM.style.color = 'var(--rojo-onpe)';
+                    badgeDOM.innerText = 'Sin registrar';
+                }
+                
+                if (obs !== "") {
+                    obsDOM.innerText = 'Obs. actuales: ' + obs;
+                }
             }
             actualizarGraficosCirculares(); 
 
             const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obs)}&cel=&dir=`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
-            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Actualizado con éxito!'; selectCap.value = ''; })
+            .then(() => { 
+                msj.style.color = '#2e7d32'; 
+                msj.innerText = '¡Actualizado con éxito!'; 
+                selectCap.value = ''; 
+                document.getElementById('obs_' + dniTarget).value = ''; 
+            })
             .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al guardar.'; })
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
         }
