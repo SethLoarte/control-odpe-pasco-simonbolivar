@@ -39,13 +39,11 @@
         .login-card h2 { color: var(--azul-onpe); font-size: 20px; margin-bottom: 5px; }
         .login-card h3 { color: var(--rojo-onpe); font-size: 16px; margin-bottom: 20px; }
         
-        /* Ajustes visuales del input (Borde rojo y sin flechas) */
         .input-group input { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; outline: none; margin-bottom: 15px; transition: border-color 0.3s; }
         .input-group input:focus { border-color: var(--rojo-onpe); }
         input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; }
 
-        /* Ajustes del botón (Cambio de color dinámico) */
         .btn-consultar { width: 100%; background-color: #757575; color: var(--blanco); border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background-color 0.3s; }
         .btn-consultar.listo { background-color: var(--rojo-onpe); }
 
@@ -69,7 +67,7 @@
 
         /* --- ACORDEONES CON FLECHAS --- */
         .btn-acordeon { width: 100%; text-align: left; background: var(--blanco); border: 1px solid #ddd; padding: 15px; font-size: 16px; font-weight: bold; color: var(--azul-onpe); cursor: pointer; border-radius: 8px; margin-bottom: 8px; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 20px; }
+        .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 0; margin-bottom: 25px; } /* Ajuste de margen para empujar gráficos hacia abajo */
         .btn-acordeon.ie-btn { background: #e3f2fd; border-left: 5px solid var(--celeste-onpe); margin-left: 10px; width: calc(100% - 10px); }
         .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; }
         .acordeon-contenido { margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease; }
@@ -141,8 +139,10 @@
         <div class="dashboard-container">
             <div id="admin-graficos" class="hidden">
                 <h2 style="color: var(--azul-onpe); margin-bottom: 15px;">Dashboard Maestro en Tiempo Real</h2>
+                
+                <div id="contenedor-acordeon-admin"></div>
+
                 <div class="graficos-container">
-                    
                     <div class="grafico-card">
                         <h4>Centro Poblado Paragsha</h4>
                         <div class="circulo-progreso" id="circulo-paragsha" style="--porcentaje: 0%; --color-barra: var(--celeste-onpe);">
@@ -160,7 +160,6 @@
                         <p id="texto-resto" style="font-weight: bold; color: var(--texto-claro);">0 / 0</p>
                         <button class="btn-pdf" id="btn-pdf-goyita" style="background-color: #c00000;" onclick="dispararPDF('GOYITA')">📄 Generar PDF (Distrito)</button>
                     </div>
-
                 </div>
             </div>
 
@@ -190,13 +189,11 @@
         let usuarioActual = ''; 
         let intervaloReloj;
 
-        // ACTIVACIÓN DINÁMICA DEL BOTÓN CONSULTAR
         document.addEventListener('DOMContentLoaded', () => {
             const inputBusq = document.getElementById('inputBusqueda');
             const btnBusq = document.getElementById('btnConsultarPrincipal');
             
             inputBusq.addEventListener('input', function() {
-                // El botón se enciende si se digitan 8 números (DNI) o 6 (Mesa)
                 if (this.value.length === 8 || this.value.length === 6) {
                     btnBusq.classList.add('listo');
                 } else {
@@ -457,7 +454,9 @@
             });
             htmlAcordeon += `</div>`;
 
-            document.getElementById('contenedor-resultados').innerHTML = htmlAcordeon;
+            // INYECCIÓN EN EL NUEVO CONTENEDOR SUPERIOR
+            document.getElementById('contenedor-acordeon-admin').innerHTML = htmlAcordeon;
+            document.getElementById('contenedor-resultados').innerHTML = ''; 
             document.getElementById('admin-graficos').classList.remove('hidden');
             document.getElementById('btn-pdf-seth').style.display = (usuarioActual === 'SETH') ? 'block' : 'none';
             document.getElementById('btn-pdf-goyita').style.display = (usuarioActual === 'GOYITA') ? 'block' : 'none';
@@ -585,140 +584,4 @@
             .then(() => { 
                 msj.style.color = '#2e7d32'; 
                 msj.innerText = '¡Actualizado con éxito!'; 
-                selectCap.value = ''; 
-                document.getElementById('obs_' + dniTarget).value = ''; 
-            })
-            .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al guardar.'; })
-            .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
-        }
-
-        function guardarContacto(dniTarget) {
-            let cel = document.getElementById('cel_' + dniTarget).value.trim();
-            let dir = document.getElementById('dir_' + dniTarget).value.trim();
-            const msj = document.getElementById('msg_cont_' + dniTarget);
-            const btnG = document.getElementById('btn_cont_' + dniTarget);
-            const btnD = document.getElementById('btn_del_' + dniTarget);
-
-            msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; 
-            btnG.disabled = true; btnD.disabled = true;
-
-            const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
-            let capEnvio = '', obsEnvio = '';
-
-            let celEnvio = cel === "" ? " " : cel; 
-            let dirEnvio = dir === "" ? " " : dir;
-
-            if(index !== -1) {
-                let colArray = baseDeDatos[index].split(',');
-                while(colArray.length < 10) colArray.push('');
-                capEnvio = colArray[8]; 
-                obsEnvio = colArray[9];
-                
-                colArray[5] = celEnvio; 
-                colArray[6] = dirEnvio;
-                baseDeDatos[index] = colArray.join(',');
-
-                document.getElementById('lbl_cel_' + dniTarget).innerText = cel === "" ? 'Sin número' : cel;
-                document.getElementById('lbl_dir_' + dniTarget).innerText = dir === "" ? 'No especificada' : dir;
-            }
-
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(celEnvio)}&dir=${encodeURIComponent(dirEnvio)}`;
-
-            fetch(urlEnvio, { mode: 'no-cors' })
-            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Contacto guardado!'; })
-            .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al conectar'; })
-            .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
-        }
-
-        function borrarContacto(dniTarget) {
-            document.getElementById('cel_' + dniTarget).value = '';
-            document.getElementById('dir_' + dniTarget).value = '';
-            
-            const msj = document.getElementById('msg_cont_' + dniTarget);
-            const btnG = document.getElementById('btn_cont_' + dniTarget);
-            const btnD = document.getElementById('btn_del_' + dniTarget);
-
-            msj.style.color = 'var(--rojo-onpe)'; msj.innerText = 'Borrando...'; 
-            btnG.disabled = true; btnD.disabled = true;
-
-            const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
-            let capEnvio = '', obsEnvio = '';
-            
-            if(index !== -1) {
-                let colArray = baseDeDatos[index].split(',');
-                while(colArray.length < 10) colArray.push('');
-                capEnvio = colArray[8]; 
-                obsEnvio = colArray[9];
-                
-                colArray[5] = ' '; 
-                colArray[6] = ' ';
-                baseDeDatos[index] = colArray.join(',');
-
-                document.getElementById('lbl_cel_' + dniTarget).innerText = 'Sin número';
-                document.getElementById('lbl_dir_' + dniTarget).innerText = 'No especificada';
-            }
-
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(" ")}&dir=${encodeURIComponent(" ")}`;
-
-            fetch(urlEnvio, { mode: 'no-cors' })
-            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Datos borrados!'; })
-            .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al conectar'; })
-            .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
-        }
-
-        function dispararPDF(tipo) {
-            if(tipo === 'SETH') {
-                descargarReporteDiario(window.metricas.sanAndres.cap, window.metricas.sanAndres.total, 'CENTRO POBLADO PARAGSHA');
-            } else {
-                descargarReporteDiario(window.metricas.resto.cap, window.metricas.resto.total, 'DISTRITO SIMÓN BOLÍVAR');
-            }
-        }
-
-        function descargarReporteDiario(avanceMM, totalMM, distritoNombre) {
-            let metaNum = Math.round((totalMM * 57) / 100);
-            let porcentaje = totalMM > 0 ? ((avanceMM * 100) / totalMM).toFixed(2) : 0;
-            let fechaHoy = new Date().toLocaleDateString('es-PE');
-            
-            document.getElementById('pdf-distrito').innerText = distritoNombre;
-            document.getElementById('pdf-fecha').innerText = fechaHoy;
-            document.getElementById('pdf-total-mm').innerText = totalMM;
-            document.getElementById('pdf-meta-mm').innerText = metaNum;
-            document.getElementById('pdf-avance-numero-mm').innerText = avanceMM;
-            document.getElementById('pdf-avance-porcentaje-mm').innerText = porcentaje + '%';
-            
-            let elemento = document.getElementById('reporte-pdf');
-            let opciones = { margin: 0, filename: `Avance_${distritoNombre}_${fechaHoy}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'px', format: [1122, 793], orientation: 'landscape' } };
-            html2pdf().set(opciones).from(elemento).save();
-        }
-
-        function cambiarPantalla() {
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.body.classList.remove('login-bg'); 
-            document.getElementById('login-view').classList.add('hidden');
-            document.getElementById('dashboard-view').classList.remove('hidden');
-            
-            // Limpiamos los campos y apagamos el botón de la vista login al entrar
-            document.getElementById('inputBusqueda').value = '';
-            document.getElementById('btnConsultarPrincipal').classList.remove('listo');
-            document.getElementById('mensaje-login').innerText = '';
-        }
-
-        function cerrarSesion() {
-            clearInterval(intervaloReloj);
-            sessionStorage.removeItem('sesionFin');
-            sessionStorage.removeItem('ultimaBusqueda');
-            document.getElementById('reloj-container').classList.add('hidden');
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.body.classList.add('login-bg'); 
-            document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('login-view').classList.remove('hidden');
-            
-            // Limpiamos los campos y apagamos el botón al salir
-            document.getElementById('inputBusqueda').value = '';
-            document.getElementById('btnConsultarPrincipal').classList.remove('listo');
-            
-            usuarioActual = ''; baseDeDatos = [];
-        }
-    </script>
-</body>
-</html>
+                selectCap.
