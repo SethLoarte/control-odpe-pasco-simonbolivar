@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -39,11 +39,11 @@
         .login-card h2 { color: var(--azul-onpe); font-size: 20px; margin-bottom: 5px; }
         .login-card h3 { color: var(--rojo-onpe); font-size: 16px; margin-bottom: 20px; }
         
+        /* Ajustes visuales del input (Borde rojo y sin flechas nativas) */
         .input-group input { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; outline: none; margin-bottom: 15px; transition: border-color 0.3s; }
         .input-group input:focus { border-color: var(--rojo-onpe); }
-        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; }
 
+        /* Ajustes del botón (Cambio de color dinámico) */
         .btn-consultar { width: 100%; background-color: #757575; color: var(--blanco); border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background-color 0.3s; }
         .btn-consultar.listo { background-color: var(--rojo-onpe); }
 
@@ -67,7 +67,7 @@
 
         /* --- ACORDEONES CON FLECHAS --- */
         .btn-acordeon { width: 100%; text-align: left; background: var(--blanco); border: 1px solid #ddd; padding: 15px; font-size: 16px; font-weight: bold; color: var(--azul-onpe); cursor: pointer; border-radius: 8px; margin-bottom: 8px; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 0; margin-bottom: 25px; } /* Ajuste de margen para empujar gráficos hacia abajo */
+        .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 0; margin-bottom: 25px; } 
         .btn-acordeon.ie-btn { background: #e3f2fd; border-left: 5px solid var(--celeste-onpe); margin-left: 10px; width: calc(100% - 10px); }
         .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; }
         .acordeon-contenido { margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease; }
@@ -112,6 +112,7 @@
 </head>
 <body class="login-bg">
 
+    <!-- OVERLAY DE CARGA -->
     <div id="loading-screen" class="hidden">
         <img src="https://consultaelectoral.onpe.gob.pe/assets/loading/loading.svg" alt="Cargando...">
     </div>
@@ -122,7 +123,8 @@
             <h2>Elecciones Regionales</h2>
             <h3>Distrito Simón Bolívar</h3>
             <div class="input-group">
-                <input type="number" inputmode="numeric" id="inputBusqueda" placeholder="DNI (8) o N° Mesa (6)" onkeypress="if(event.key === 'Enter') consultar()">
+                <!-- SE CAMBIÓ A TYPE="TEXT" PARA EVITAR ERRORES DE LECTURA POR ESPACIOS -->
+                <input type="text" inputmode="numeric" pattern="[0-9]*" id="inputBusqueda" placeholder="DNI (8) o N° Mesa (6)" onkeypress="if(event.key === 'Enter') consultar()">
             </div>
             <button class="btn-consultar" onclick="consultar()" id="btnConsultarPrincipal">CONSULTAR</button>
             <p id="mensaje-login" style="font-size: 13px; margin-top: 15px; font-weight: bold;"></p>
@@ -189,12 +191,15 @@
         let usuarioActual = ''; 
         let intervaloReloj;
 
+        // ACTIVACIÓN DINÁMICA DEL BOTÓN A PRUEBA DE ESPACIOS
         document.addEventListener('DOMContentLoaded', () => {
             const inputBusq = document.getElementById('inputBusqueda');
             const btnBusq = document.getElementById('btnConsultarPrincipal');
             
             inputBusq.addEventListener('input', function() {
-                if (this.value.length === 8 || this.value.length === 6) {
+                let valorLimpio = this.value.trim(); 
+                
+                if (valorLimpio.length === 8 || valorLimpio.length === 6) {
                     btnBusq.classList.add('listo');
                 } else {
                     btnBusq.classList.remove('listo');
@@ -346,10 +351,11 @@
         }
 
         async function consultar(esAutoLogin = false) {
-            const valor = document.getElementById('inputBusqueda').value.trim();
+            const input = document.getElementById('inputBusqueda');
+            const valorLimpio = input.value.trim(); // Sanitización antes de consultar
             const msj = document.getElementById('mensaje-login');
             
-            if(valor === '') return;
+            if(valorLimpio === '') return;
             
             document.getElementById('loading-screen').classList.remove('hidden');
             if(!esAutoLogin) msj.innerText = '';
@@ -361,17 +367,17 @@
                 let filasCrudas = text.split(/\r?\n/);
                 baseDeDatos = filasCrudas.filter((fila, index) => index > 0 && fila.trim() !== '');
 
-                if (valor === DNI_SETH) { 
+                if (valorLimpio === DNI_SETH) { 
                     usuarioActual = 'SETH'; 
                     prepararPanelAdmin(); 
-                } else if (valor === DNI_GOYITA) { 
+                } else if (valorLimpio === DNI_GOYITA) { 
                     usuarioActual = 'GOYITA'; 
                     prepararPanelAdmin(); 
                 } else {
                     usuarioActual = 'CM';
-                    mostrarBusquedaNormal(valor);
+                    mostrarBusquedaNormal(valorLimpio);
                 }
-                iniciarReloj(valor);
+                iniciarReloj(valorLimpio);
             } catch(e) {
                 document.getElementById('loading-screen').classList.add('hidden');
                 if(esAutoLogin) document.getElementById('login-view').classList.remove('hidden');
@@ -454,7 +460,6 @@
             });
             htmlAcordeon += `</div>`;
 
-            // INYECCIÓN EN EL NUEVO CONTENEDOR SUPERIOR
             document.getElementById('contenedor-acordeon-admin').innerHTML = htmlAcordeon;
             document.getElementById('contenedor-resultados').innerHTML = ''; 
             document.getElementById('admin-graficos').classList.remove('hidden');
@@ -584,4 +589,138 @@
             .then(() => { 
                 msj.style.color = '#2e7d32'; 
                 msj.innerText = '¡Actualizado con éxito!'; 
-                selectCap.
+                selectCap.value = ''; 
+                document.getElementById('obs_' + dniTarget).value = ''; 
+            })
+            .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al guardar.'; })
+            .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
+        }
+
+        function guardarContacto(dniTarget) {
+            let cel = document.getElementById('cel_' + dniTarget).value.trim();
+            let dir = document.getElementById('dir_' + dniTarget).value.trim();
+            const msj = document.getElementById('msg_cont_' + dniTarget);
+            const btnG = document.getElementById('btn_cont_' + dniTarget);
+            const btnD = document.getElementById('btn_del_' + dniTarget);
+
+            msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; 
+            btnG.disabled = true; btnD.disabled = true;
+
+            const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
+            let capEnvio = '', obsEnvio = '';
+
+            let celEnvio = cel === "" ? " " : cel; 
+            let dirEnvio = dir === "" ? " " : dir;
+
+            if(index !== -1) {
+                let colArray = baseDeDatos[index].split(',');
+                while(colArray.length < 10) colArray.push('');
+                capEnvio = colArray[8]; 
+                obsEnvio = colArray[9];
+                
+                colArray[5] = celEnvio; 
+                colArray[6] = dirEnvio;
+                baseDeDatos[index] = colArray.join(',');
+
+                document.getElementById('lbl_cel_' + dniTarget).innerText = cel === "" ? 'Sin número' : cel;
+                document.getElementById('lbl_dir_' + dniTarget).innerText = dir === "" ? 'No especificada' : dir;
+            }
+
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(celEnvio)}&dir=${encodeURIComponent(dirEnvio)}`;
+
+            fetch(urlEnvio, { mode: 'no-cors' })
+            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Contacto guardado!'; })
+            .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al conectar'; })
+            .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
+        }
+
+        function borrarContacto(dniTarget) {
+            document.getElementById('cel_' + dniTarget).value = '';
+            document.getElementById('dir_' + dniTarget).value = '';
+            
+            const msj = document.getElementById('msg_cont_' + dniTarget);
+            const btnG = document.getElementById('btn_cont_' + dniTarget);
+            const btnD = document.getElementById('btn_del_' + dniTarget);
+
+            msj.style.color = 'var(--rojo-onpe)'; msj.innerText = 'Borrando...'; 
+            btnG.disabled = true; btnD.disabled = true;
+
+            const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
+            let capEnvio = '', obsEnvio = '';
+            
+            if(index !== -1) {
+                let colArray = baseDeDatos[index].split(',');
+                while(colArray.length < 10) colArray.push('');
+                capEnvio = colArray[8]; 
+                obsEnvio = colArray[9];
+                
+                colArray[5] = ' '; 
+                colArray[6] = ' ';
+                baseDeDatos[index] = colArray.join(',');
+
+                document.getElementById('lbl_cel_' + dniTarget).innerText = 'Sin número';
+                document.getElementById('lbl_dir_' + dniTarget).innerText = 'No especificada';
+            }
+
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(" ")}&dir=${encodeURIComponent(" ")}`;
+
+            fetch(urlEnvio, { mode: 'no-cors' })
+            .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Datos borrados!'; })
+            .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al conectar'; })
+            .finally(() => { btnG.disabled = false; btnD.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
+        }
+
+        function dispararPDF(tipo) {
+            if(tipo === 'SETH') {
+                descargarReporteDiario(window.metricas.sanAndres.cap, window.metricas.sanAndres.total, 'CENTRO POBLADO PARAGSHA');
+            } else {
+                descargarReporteDiario(window.metricas.resto.cap, window.metricas.resto.total, 'DISTRITO SIMÓN BOLÍVAR');
+            }
+        }
+
+        function descargarReporteDiario(avanceMM, totalMM, distritoNombre) {
+            let metaNum = Math.round((totalMM * 57) / 100);
+            let porcentaje = totalMM > 0 ? ((avanceMM * 100) / totalMM).toFixed(2) : 0;
+            let fechaHoy = new Date().toLocaleDateString('es-PE');
+            
+            document.getElementById('pdf-distrito').innerText = distritoNombre;
+            document.getElementById('pdf-fecha').innerText = fechaHoy;
+            document.getElementById('pdf-total-mm').innerText = totalMM;
+            document.getElementById('pdf-meta-mm').innerText = metaNum;
+            document.getElementById('pdf-avance-numero-mm').innerText = avanceMM;
+            document.getElementById('pdf-avance-porcentaje-mm').innerText = porcentaje + '%';
+            
+            let elemento = document.getElementById('reporte-pdf');
+            let opciones = { margin: 0, filename: `Avance_${distritoNombre}_${fechaHoy}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'px', format: [1122, 793], orientation: 'landscape' } };
+            html2pdf().set(opciones).from(elemento).save();
+        }
+
+        function cambiarPantalla() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.body.classList.remove('login-bg'); 
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            
+            document.getElementById('inputBusqueda').value = '';
+            document.getElementById('btnConsultarPrincipal').classList.remove('listo');
+            document.getElementById('mensaje-login').innerText = '';
+        }
+
+        function cerrarSesion() {
+            clearInterval(intervaloReloj);
+            sessionStorage.removeItem('sesionFin');
+            sessionStorage.removeItem('ultimaBusqueda');
+            document.getElementById('reloj-container').classList.add('hidden');
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.body.classList.add('login-bg'); 
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+            
+            document.getElementById('inputBusqueda').value = '';
+            document.getElementById('btnConsultarPrincipal').classList.remove('listo');
+            
+            usuarioActual = ''; baseDeDatos = [];
+        }
+    </script>
+</body>
+</html>
