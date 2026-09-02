@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         :root {
             --azul-onpe: #003366; --celeste-onpe: #4a90e2; --rojo-onpe: #e30613;
-            --verde-miembro: #5cb85c; /* Color verde para el cargo */
+            --verde-miembro: #5cb85c; 
             --gris-fondo: #f4f6f9; --blanco: #ffffff; --texto-oscuro: #333333; --texto-claro: #666666;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,6 +27,11 @@
 
         .hidden { display: none !important; }
         .pdf-offscreen { position: absolute; left: -9999px; top: 0; }
+
+        /* --- PANTALLA DE CARGA (NUEVO) --- */
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--blanco); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #loading-screen img { width: 120px; }
+        #loading-screen p { color: var(--azul-onpe); font-weight: bold; margin-top: 15px; font-size: 14px; }
 
         /* --- VISTA INICIO --- */
         #login-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
@@ -102,6 +107,11 @@
 </head>
 <body class="login-bg">
 
+    <div id="loading-screen" class="hidden">
+        <img src="https://consultaelectoral.onpe.gob.pe/assets/loading/loading.svg" alt="Cargando...">
+        <p>Conectando con la base de datos...</p>
+    </div>
+
     <div id="login-view">
         <div class="login-card">
             <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE">
@@ -168,25 +178,28 @@
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShFcVD-MAHCeuCCteYy-mrnAU7VT9XWMQitmvFt_ZW8F2qssKpCI7upzfr_pJ2hoBZk-5gH4U9BaF-/pub?gid=1997588352&single=true&output=csv';
         const DNI_SETH = '71036931'; 
         const DNI_GOYITA = '70749305'; 
-        const TIEMPO_SESION = 300000; // 5 minutos en milisegundos
+        const TIEMPO_SESION = 300000; 
 
         let baseDeDatos = []; 
         let usuarioActual = ''; 
         let intervaloReloj;
 
-        // AUTO-LOGIN AL CARGAR PÁGINA
+        // AUTO-LOGIN CON CARGA VISUAL INMEDIATA
         window.onload = () => {
             let fin = sessionStorage.getItem('sesionFin');
             let ultima = sessionStorage.getItem('ultimaBusqueda');
             if (fin && Date.now() < fin && ultima) {
+                // Interceptamos la vista antes de dibujar el login
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('loading-screen').classList.remove('hidden');
+                
                 document.getElementById('inputBusqueda').value = ultima;
-                consultar(true); // Parametro true indica que es auto-login
+                consultar(true); 
             } else {
                 cerrarSesion();
             }
         };
 
-        // GESTIÓN DEL RELOJ
         function iniciarReloj(valorBusqueda) {
             if(!sessionStorage.getItem('sesionFin')) {
                 sessionStorage.setItem('sesionFin', Date.now() + TIEMPO_SESION);
@@ -321,10 +334,10 @@
             const msj = document.getElementById('mensaje-login');
             
             if(valor === '') return;
-            if(!esAutoLogin) {
-                msj.style.color = '#333'; 
-                msj.innerText = 'Conectando con la base de datos...';
-            }
+            
+            // Mostrar pantalla de carga
+            document.getElementById('loading-screen').classList.remove('hidden');
+            if(!esAutoLogin) msj.innerText = '';
             
             try {
                 const response = await fetch(CSV_URL);
@@ -345,6 +358,9 @@
                 }
                 iniciarReloj(valor);
             } catch(e) {
+                // Si falla el internet, retiramos el logo y mostramos error
+                document.getElementById('loading-screen').classList.add('hidden');
+                if(esAutoLogin) document.getElementById('login-view').classList.remove('hidden');
                 msj.style.color = 'red'; msj.innerText = "Error de conexión.";
             }
         }
@@ -352,6 +368,7 @@
         function mostrarBusquedaNormal(valor) {
             let htmlTarjetas = '';
             const esDni = valor.length === 8;
+            const msj = document.getElementById('mensaje-login');
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
@@ -368,8 +385,12 @@
                 document.getElementById('admin-graficos').classList.add('hidden');
                 cambiarPantalla();
             } else {
-                document.getElementById('mensaje-login').style.color = 'red';
-                document.getElementById('mensaje-login').innerText = "No se encontraron resultados.";
+                document.getElementById('loading-screen').classList.add('hidden');
+                if(document.getElementById('login-view').classList.contains('hidden')) {
+                     document.getElementById('login-view').classList.remove('hidden');
+                }
+                msj.style.color = 'red';
+                msj.innerText = "No se encontraron resultados.";
             }
         }
 
@@ -654,6 +675,8 @@
         }
 
         function cambiarPantalla() {
+            // Ocultamos la pantalla de carga y mostramos el dashboard
+            document.getElementById('loading-screen').classList.add('hidden');
             document.body.classList.remove('login-bg'); 
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
@@ -666,6 +689,7 @@
             sessionStorage.removeItem('sesionFin');
             sessionStorage.removeItem('ultimaBusqueda');
             document.getElementById('reloj-container').classList.add('hidden');
+            document.getElementById('loading-screen').classList.add('hidden');
             document.body.classList.add('login-bg'); 
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
