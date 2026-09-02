@@ -28,26 +28,21 @@
         .hidden { display: none !important; }
         .pdf-offscreen { position: absolute; left: -9999px; top: 0; }
 
-        /* --- PANTALLA DE CARGA --- */
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--blanco); z-index: 9999; display: flex; align-items: center; justify-content: center; }
         #loading-screen img { width: 300px; max-width: 80vw; }
 
-        /* --- VISTA INICIO Y FORMULARIO --- */
         #login-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         .login-card { background: var(--blanco); padding: 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); width: min(100%, 420px); text-align: center; }
         .login-card img { max-width: 80%; max-height: 60px; margin-bottom: 15px; }
         .login-card h2 { color: var(--azul-onpe); font-size: 20px; margin-bottom: 5px; }
         .login-card h3 { color: var(--rojo-onpe); font-size: 16px; margin-bottom: 20px; }
         
-        /* Ajustes visuales del input (Borde rojo y sin flechas nativas) */
         .input-group input { width: 100%; padding: 12px; border: 2px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; outline: none; margin-bottom: 15px; transition: border-color 0.3s; }
         .input-group input:focus { border-color: var(--rojo-onpe); }
 
-        /* Ajustes del botón (Cambio de color dinámico) */
         .btn-consultar { width: 100%; background-color: #757575; color: var(--blanco); border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background-color 0.3s; }
         .btn-consultar.listo { background-color: var(--rojo-onpe); }
 
-        /* --- NAVBAR Y LAYOUT --- */
         .navbar { background: var(--blanco); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px; }
         .navbar img { height: 35px; }
         .info-sesion { font-size: 13px; font-weight: bold; color: var(--texto-claro); display: flex; align-items: center; gap: 5px; }
@@ -55,7 +50,6 @@
         .btn-salir { color: var(--azul-onpe); background: none; border: none; font-size: 15px; font-weight: bold; cursor: pointer; }
         .dashboard-container { width: min(100%, 1100px); margin: 20px auto; padding: 0 15px; }
 
-        /* --- GRÁFICOS CIRCULARES --- */
         .graficos-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 25px; }
         .grafico-card { background: var(--blanco); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; flex: 1; min-width: 250px; border-top: 5px solid var(--azul-onpe); }
         .grafico-card.goyita { border-top-color: var(--rojo-onpe); }
@@ -65,14 +59,12 @@
         .circulo-valor { position: relative; font-size: 24px; font-weight: bold; color: var(--texto-oscuro); }
         .btn-pdf { background-color: var(--rojo-onpe); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-top: 10px; }
 
-        /* --- ACORDEONES CON FLECHAS --- */
         .btn-acordeon { width: 100%; text-align: left; background: var(--blanco); border: 1px solid #ddd; padding: 15px; font-size: 16px; font-weight: bold; color: var(--azul-onpe); cursor: pointer; border-radius: 8px; margin-bottom: 8px; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 0; margin-bottom: 25px; } 
         .btn-acordeon.ie-btn { background: #e3f2fd; border-left: 5px solid var(--celeste-onpe); margin-left: 10px; width: calc(100% - 10px); }
         .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; }
         .acordeon-contenido { margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease; }
         
-        /* --- CARRUSEL HORIZONTAL --- */
         .carousel-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
         .carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; gap: 15px; padding: 10px 0; scrollbar-width: none; -ms-overflow-style: none; }
         .carousel-track::-webkit-scrollbar { display: none; }
@@ -82,7 +74,6 @@
         .left-btn { left: -10px; }
         .right-btn { right: -10px; }
 
-        /* --- TARJETAS DE MIEMBROS --- */
         .top-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .top-card { background: var(--blanco); border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
         .cargo-card { background: var(--verde-miembro); color: var(--blanco); justify-content: center; text-align: center; flex-direction: column; gap: 4px; }
@@ -112,7 +103,6 @@
 </head>
 <body class="login-bg">
 
-    <!-- OVERLAY DE CARGA -->
     <div id="loading-screen" class="hidden">
         <img src="https://consultaelectoral.onpe.gob.pe/assets/loading/loading.svg" alt="Cargando...">
     </div>
@@ -123,7 +113,6 @@
             <h2>Elecciones Regionales</h2>
             <h3>Distrito Simón Bolívar</h3>
             <div class="input-group">
-                <!-- SE CAMBIÓ A TYPE="TEXT" PARA EVITAR ERRORES DE LECTURA POR ESPACIOS -->
                 <input type="text" inputmode="numeric" pattern="[0-9]*" id="inputBusqueda" placeholder="DNI (8) o N° Mesa (6)" onkeypress="if(event.key === 'Enter') consultar()">
             </div>
             <button class="btn-consultar" onclick="consultar()" id="btnConsultarPrincipal">CONSULTAR</button>
@@ -191,14 +180,12 @@
         let usuarioActual = ''; 
         let intervaloReloj;
 
-        // ACTIVACIÓN DINÁMICA DEL BOTÓN A PRUEBA DE ESPACIOS
         document.addEventListener('DOMContentLoaded', () => {
             const inputBusq = document.getElementById('inputBusqueda');
             const btnBusq = document.getElementById('btnConsultarPrincipal');
             
             inputBusq.addEventListener('input', function() {
                 let valorLimpio = this.value.trim(); 
-                
                 if (valorLimpio.length === 8 || valorLimpio.length === 6) {
                     btnBusq.classList.add('listo');
                 } else {
@@ -332,7 +319,7 @@
                                     <option value="Virtual">Virtual</option>
                                     <option value="No Capacitado">No Capacitado</option>
                                 </select>
-                                <input type="text" id="obs_${col[1]}" placeholder="Añadir observación nueva...">
+                                <input type="text" id="obs_${col[1]}" value="${obsActual !== 'Ninguna' ? obsActual : ''}" placeholder="Observación (Dejar en blanco para borrar)">
                                 <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar Datos</button>
                                 <p id="msg_${col[1]}" style="text-align:center; font-size:12px; font-weight:bold; margin-top:8px;"></p>
                             </div>
@@ -352,7 +339,7 @@
 
         async function consultar(esAutoLogin = false) {
             const input = document.getElementById('inputBusqueda');
-            const valorLimpio = input.value.trim(); // Sanitización antes de consultar
+            const valorLimpio = input.value.trim(); 
             const msj = document.getElementById('mensaje-login');
             
             if(valorLimpio === '') return;
@@ -435,12 +422,28 @@
                 }
             });
 
+            // MODIFICACIÓN: ORDENAMIENTO PERSONALIZADO
+            const ordenDeseado = [
+                "IE INTEGRADO 34033 MAVILO CALERO PEREZ PLANTA B",
+                "IEI TRECE DE MAYO",
+                "IE 34032 MARTIRES DE RANCAS",
+                "IE INTEGRADA 34031 13 DE AGOSTO",
+                "IE INTEGRADO 34033 MAVILO CALERO PEREZ PLANTA A"
+            ];
+
+            let ies = Object.keys(datosAgrupados).sort((a, b) => {
+                let indexA = ordenDeseado.indexOf(a);
+                let indexB = ordenDeseado.indexOf(b);
+                if(indexA === -1) indexA = 999;
+                if(indexB === -1) indexB = 999;
+                return indexA - indexB;
+            });
+
             let htmlAcordeon = `
                 <button class="btn-acordeon main-btn" onclick="toggleAcordeon('panel-datos-global', this)">📁 VER DATOS Y PADRÓN <span style="float:right;">▼</span></button>
                 <div id="panel-datos-global" class="acordeon-contenido hidden">
             `;
 
-            let ies = Object.keys(datosAgrupados).sort();
             ies.forEach(ie => {
                 let idIE = 'ie_' + ie.replace(/[^a-zA-Z0-9]/g, '');
                 htmlAcordeon += `
@@ -537,22 +540,20 @@
             };
         }
 
+        // MODIFICACIÓN: CONTROL DE BORRADO DE OBSERVACIONES
         function guardar(dniTarget) {
             const selectCap = document.getElementById('cap_' + dniTarget);
             const cap = selectCap.value;
-            const obs = document.getElementById('obs_' + dniTarget).value;
+            const obsInput = document.getElementById('obs_' + dniTarget).value.trim();
             const msj = document.getElementById('msg_' + dniTarget);
             const btn = document.getElementById('btn_' + dniTarget);
-            
-            if(cap === "" && obs === "") {
-                msj.style.color = 'red'; msj.innerText = 'No ingresaste datos.';
-                return setTimeout(() => { msj.innerText = ''; }, 2500);
-            }
 
-            msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; btn.disabled = true;
+            msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; 
+            btn.disabled = true;
 
-            let capEnvio = cap;
             const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
+            let capEnvio = cap;
+            let obsEnvio = obsInput === "" ? " " : obsInput; // Enviará espacio para borrar si está vacío
             
             if(index !== -1) {
                 let colArray = baseDeDatos[index].split(',');
@@ -561,13 +562,13 @@
                 if(cap === "") capEnvio = colArray[8]; 
                 else colArray[8] = cap; 
                 
-                if(obs !== "") colArray[9] = obs;
+                colArray[9] = obsEnvio;
                 baseDeDatos[index] = colArray.join(',');
 
                 let badgeDOM = document.getElementById('badge_' + dniTarget);
                 let obsDOM = document.getElementById('obs_text_' + dniTarget);
                 
-                if (capEnvio && capEnvio !== "No Capacitado") {
+                if (capEnvio && capEnvio !== "No Capacitado" && capEnvio.trim() !== "") {
                     badgeDOM.style.background = '#e8f5e9';
                     badgeDOM.style.color = '#2e7d32';
                     badgeDOM.innerText = 'Registrado: ' + capEnvio;
@@ -577,20 +578,17 @@
                     badgeDOM.innerText = 'Sin registrar';
                 }
                 
-                if (obs !== "") {
-                    obsDOM.innerText = 'Obs. actuales: ' + obs;
-                }
+                obsDOM.innerText = 'Obs. actuales: ' + (obsInput === "" ? 'Ninguna' : obsInput);
             }
             actualizarGraficosCirculares(); 
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obs)}&cel=&dir=`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=&dir=`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { 
                 msj.style.color = '#2e7d32'; 
                 msj.innerText = '¡Actualizado con éxito!'; 
                 selectCap.value = ''; 
-                document.getElementById('obs_' + dniTarget).value = ''; 
             })
             .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al guardar.'; })
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
