@@ -9,6 +9,7 @@
     <style>
         :root {
             --azul-onpe: #003366; --celeste-onpe: #4a90e2; --rojo-onpe: #e30613;
+            --verde-miembro: #5cb85c; /* Color verde para el cargo */
             --gris-fondo: #f4f6f9; --blanco: #ffffff; --texto-oscuro: #333333; --texto-claro: #666666;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,8 +38,10 @@
         .btn-consultar { width: 100%; background-color: #757575; color: var(--blanco); border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; }
 
         /* --- NAVBAR Y LAYOUT --- */
-        .navbar { background: var(--blanco); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .navbar { background: var(--blanco); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px; }
         .navbar img { height: 35px; }
+        .info-sesion { font-size: 13px; font-weight: bold; color: var(--texto-claro); display: flex; align-items: center; gap: 5px; }
+        .info-sesion span { color: var(--rojo-onpe); }
         .btn-salir { color: var(--azul-onpe); background: none; border: none; font-size: 15px; font-weight: bold; cursor: pointer; }
         .dashboard-container { width: min(100%, 1100px); margin: 20px auto; padding: 0 15px; }
 
@@ -59,7 +62,7 @@
         .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; }
         .acordeon-contenido { margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease; }
         
-        /* --- CARRUSEL HORIZONTAL (NUEVO) --- */
+        /* --- CARRUSEL HORIZONTAL --- */
         .carousel-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
         .carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; gap: 15px; padding: 10px 0; scrollbar-width: none; -ms-overflow-style: none; }
         .carousel-track::-webkit-scrollbar { display: none; }
@@ -70,10 +73,9 @@
         .right-btn { right: -10px; }
 
         /* --- TARJETAS DE MIEMBROS --- */
-        .onpe-dashboard { /* Modificado para adaptarse al carrusel */ }
         .top-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .top-card { background: var(--blanco); border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
-        .cargo-card { background: var(--rojo-onpe); color: var(--blanco); justify-content: center; text-align: center; flex-direction: column; gap: 4px; }
+        .cargo-card { background: var(--verde-miembro); color: var(--blanco); justify-content: center; text-align: center; flex-direction: column; gap: 4px; }
         .icon-circle { width: 42px; height: 42px; background: #eef2f7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
         .card-data p { font-size: 12px; color: var(--celeste-onpe); font-weight: bold; }
         
@@ -92,9 +94,9 @@
             .btn-acordeon.ie-btn { margin-left: 0; width: 100%; }
             .btn-acordeon.mesa-btn { margin-left: 10px; width: calc(100% - 10px); }
             .login-card { padding: 20px; }
-            /* Ajuste extra de botones en celular para que no tapen la tarjeta */
             .left-btn { left: -5px; width: 35px; height: 35px; }
             .right-btn { right: -5px; width: 35px; height: 35px; }
+            .info-sesion { width: 100%; justify-content: center; margin-bottom: 10px; }
         }
     </style>
 </head>
@@ -116,6 +118,7 @@
     <div id="dashboard-view" class="hidden">
         <div class="navbar">
             <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE">
+            <div class="info-sesion hidden" id="reloj-container">Tiempo de sesión: <span id="reloj-texto">05:00</span></div>
             <button class="btn-salir" onclick="cerrarSesion()">Salir ➔</button>
         </div>
         
@@ -165,11 +168,52 @@
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShFcVD-MAHCeuCCteYy-mrnAU7VT9XWMQitmvFt_ZW8F2qssKpCI7upzfr_pJ2hoBZk-5gH4U9BaF-/pub?gid=1997588352&single=true&output=csv';
         const DNI_SETH = '71036931'; 
         const DNI_GOYITA = '70749305'; 
+        const TIEMPO_SESION = 300000; // 5 minutos en milisegundos
 
         let baseDeDatos = []; 
         let usuarioActual = ''; 
+        let intervaloReloj;
 
-        // --- ENVOLTORIO DE CARRUSEL ---
+        // AUTO-LOGIN AL CARGAR PÁGINA
+        window.onload = () => {
+            let fin = sessionStorage.getItem('sesionFin');
+            let ultima = sessionStorage.getItem('ultimaBusqueda');
+            if (fin && Date.now() < fin && ultima) {
+                document.getElementById('inputBusqueda').value = ultima;
+                consultar(true); // Parametro true indica que es auto-login
+            } else {
+                cerrarSesion();
+            }
+        };
+
+        // GESTIÓN DEL RELOJ
+        function iniciarReloj(valorBusqueda) {
+            if(!sessionStorage.getItem('sesionFin')) {
+                sessionStorage.setItem('sesionFin', Date.now() + TIEMPO_SESION);
+            }
+            sessionStorage.setItem('ultimaBusqueda', valorBusqueda);
+            
+            document.getElementById('reloj-container').classList.remove('hidden');
+            clearInterval(intervaloReloj);
+            intervaloReloj = setInterval(actualizarReloj, 1000);
+            actualizarReloj();
+        }
+
+        function actualizarReloj() {
+            let fin = sessionStorage.getItem('sesionFin');
+            if(!fin) return;
+            
+            let faltan = Math.floor((fin - Date.now()) / 1000);
+            if(faltan <= 0) {
+                cerrarSesion();
+                return;
+            }
+            
+            let min = Math.floor(faltan / 60);
+            let sec = faltan % 60;
+            document.getElementById('reloj-texto').innerText = `${min < 10 ? '0'+min : min}:${sec < 10 ? '0'+sec : sec}`;
+        }
+
         function wrapInCarousel(htmlContent, idUnico) {
             return `
             <div class="carousel-wrapper">
@@ -182,7 +226,6 @@
             `;
         }
 
-        // Lógica de movimiento de las flechas
         function moverCarrusel(id, direccion) {
             const track = document.getElementById('track_' + id);
             const scrollAmount = track.offsetWidth; 
@@ -217,7 +260,6 @@
                    <p id="msg_cont_${col[1]}" style="text-align:center; font-size:11px; font-weight:bold; margin-top:4px;"></p>`
                 : `<h4 style="font-size:13px; text-transform:none;">${col[6] || 'No especificada'}<br>📱 Cel: ${col[5] || 'Sin número'}</h4>`;
 
-            // La tarjeta ahora nace con la clase miembro-slide para acoplarse al carrusel (y se quitó la etiqueta <hr>)
             return `
             <div class="miembro-slide">
                 <div class="onpe-dashboard">
@@ -274,12 +316,15 @@
             </div>`;
         }
 
-        async function consultar() {
+        async function consultar(esAutoLogin = false) {
             const valor = document.getElementById('inputBusqueda').value.trim();
             const msj = document.getElementById('mensaje-login');
             
             if(valor === '') return;
-            msj.style.color = '#333'; msj.innerText = 'Conectando con la base de datos...';
+            if(!esAutoLogin) {
+                msj.style.color = '#333'; 
+                msj.innerText = 'Conectando con la base de datos...';
+            }
             
             try {
                 const response = await fetch(CSV_URL);
@@ -298,6 +343,7 @@
                     usuarioActual = 'CM';
                     mostrarBusquedaNormal(valor);
                 }
+                iniciarReloj(valor);
             } catch(e) {
                 msj.style.color = 'red'; msj.innerText = "Error de conexión.";
             }
@@ -317,7 +363,6 @@
             });
 
             if(htmlTarjetas !== '') {
-                // Si buscan por Mesa, lo envolvemos en el carrusel automáticamente
                 let finalHtml = esDni ? htmlTarjetas : wrapInCarousel(htmlTarjetas, 'busq_' + valor);
                 document.getElementById('contenedor-resultados').innerHTML = finalHtml;
                 document.getElementById('admin-graficos').classList.add('hidden');
@@ -617,6 +662,10 @@
         }
 
         function cerrarSesion() {
+            clearInterval(intervaloReloj);
+            sessionStorage.removeItem('sesionFin');
+            sessionStorage.removeItem('ultimaBusqueda');
+            document.getElementById('reloj-container').classList.add('hidden');
             document.body.classList.add('login-bg'); 
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
