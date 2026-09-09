@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DONPE - Simón Bolívar</title>
+    <title>ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -75,7 +75,6 @@
         .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
         .acordeon-contenido { margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease; }
         
-        /* Modal de Mesas Críticas */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .modal-card { background: var(--blanco); width: 90%; max-width: 500px; max-height: 80vh; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--naranja-alerta); padding-bottom: 10px; margin-bottom: 15px; }
@@ -83,7 +82,6 @@
         .btn-cerrar { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
         .lista-critica { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
         
-        /* Nuevo estilo para hacer clic en las mesas críticas */
         .mesa-critica-item { display: flex; justify-content: space-between; align-items: center; background: #fff8f0; padding: 12px; border-radius: 8px; border-left: 4px solid var(--rojo-onpe); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
         .mesa-critica-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .mesa-critica-item.media { border-left-color: var(--naranja-alerta); }
@@ -143,15 +141,14 @@
         </div>
     </div>
 
-    <!-- MODAL MESAS CRÍTICAS -->
     <div id="modal-critico" class="modal-overlay hidden" onclick="cerrarModalCritico(event)">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>🚨 Estado Crítico: Credenciales</h3>
+                <h3 id="titulo-modal-critico">🚨 Estado Crítico</h3>
                 <button class="btn-cerrar" onclick="document.getElementById('modal-critico').classList.add('hidden')">×</button>
             </div>
             <div class="lista-critica" id="contenido-mesas-criticas">
-                <!-- Se inyectan las tarjetas de mesas por JS -->
+                <!-- Inyectado por JS -->
             </div>
         </div>
     </div>
@@ -173,14 +170,14 @@
                     <div class="grafico-card" id="card-paragsha">
                         <h4>Centro Poblado Paragsha</h4>
                         <div class="kpi-row">
-                            <div class="kpi-item">
-                                <h5>Capacitación</h5>
+                            <div class="kpi-item kpi-interactivo" onclick="abrirModalCritico('SETH', 'cap')" title="Ver mesas críticas de capacitación">
+                                <h5>📚 Capacitación</h5>
                                 <div class="circulo-progreso" id="circulo-paragsha-cap" style="--porcentaje: 0%; --color-barra: var(--celeste-onpe);">
                                     <span class="circulo-valor" id="valor-paragsha-cap">0%</span>
                                 </div>
                                 <p id="texto-paragsha-cap" style="font-weight: bold; color: var(--texto-claro); font-size: 12px; margin-top: 5px;">0 / 0</p>
                             </div>
-                            <div class="kpi-item kpi-interactivo" onclick="abrirModalCritico('SETH')" title="Ver mesas críticas">
+                            <div class="kpi-item kpi-interactivo" onclick="abrirModalCritico('SETH', 'cred')" title="Ver mesas críticas de credenciales">
                                 <h5>🪪 Credenciales</h5>
                                 <div class="circulo-progreso" id="circulo-paragsha-cred" style="--porcentaje: 0%; --color-barra: var(--naranja-alerta);">
                                     <span class="circulo-valor" id="valor-paragsha-cred">0%</span>
@@ -194,14 +191,14 @@
                     <div class="grafico-card goyita" id="card-resto">
                         <h4>Distrito Simón Bolívar</h4>
                         <div class="kpi-row">
-                            <div class="kpi-item">
-                                <h5>Capacitación</h5>
+                            <div class="kpi-item kpi-interactivo" onclick="abrirModalCritico('GOYITA', 'cap')" title="Ver mesas críticas de capacitación">
+                                <h5>📚 Capacitación</h5>
                                 <div class="circulo-progreso" id="circulo-resto-cap" style="--porcentaje: 0%; --color-barra: var(--rojo-onpe);">
                                     <span class="circulo-valor" id="valor-resto-cap">0%</span>
                                 </div>
                                 <p id="texto-resto-cap" style="font-weight: bold; color: var(--texto-claro); font-size: 12px; margin-top: 5px;">0 / 0</p>
                             </div>
-                            <div class="kpi-item kpi-interactivo" onclick="abrirModalCritico('GOYITA')" title="Ver mesas críticas">
+                            <div class="kpi-item kpi-interactivo" onclick="abrirModalCritico('GOYITA', 'cred')" title="Ver mesas críticas de credenciales">
                                 <h5>🪪 Credenciales</h5>
                                 <div class="circulo-progreso" id="circulo-resto-cred" style="--porcentaje: 0%; --color-barra: var(--naranja-alerta);">
                                     <span class="circulo-valor" id="valor-resto-cred">0%</span>
@@ -626,10 +623,11 @@
                     }
 
                     if (!reporteMesasCriticas[zona][mesa]) {
-                        reporteMesasCriticas[zona][mesa] = { ie: col[7].trim(), total: 0, cred: 0 };
+                        reporteMesasCriticas[zona][mesa] = { ie: col[7].trim(), total: 0, cred: 0, cap: 0 };
                     }
                     reporteMesasCriticas[zona][mesa].total++;
                     if(tieneCredencial) reporteMesasCriticas[zona][mesa].cred++;
+                    if(estaCapacitado) reporteMesasCriticas[zona][mesa].cap++;
                 }
             });
 
@@ -674,26 +672,39 @@
             }
         }
 
-        function abrirModalCritico(zona) {
+        function abrirModalCritico(zona, tipo) {
             let contenedor = document.getElementById('contenido-mesas-criticas');
             contenedor.innerHTML = '';
             
+            let tituloModal = document.getElementById('titulo-modal-critico');
+            if (tipo === 'cap') {
+                tituloModal.innerText = '🚨 Estado Crítico: Capacitación';
+                tituloModal.style.color = 'var(--celeste-onpe)';
+                document.querySelector('.modal-header').style.borderBottomColor = 'var(--celeste-onpe)';
+            } else {
+                tituloModal.innerText = '🚨 Estado Crítico: Credenciales';
+                tituloModal.style.color = 'var(--naranja-alerta)';
+                document.querySelector('.modal-header').style.borderBottomColor = 'var(--naranja-alerta)';
+            }
+
             let arrayMesas = [];
             let objZona = reporteMesasCriticas[zona];
             
             for(let mesa in objZona) {
                 let m = objZona[mesa];
-                let porcentaje = m.total > 0 ? (m.cred / m.total) * 100 : 0;
-                arrayMesas.push({ mesa: mesa, ie: m.ie, cred: m.cred, total: m.total, pct: porcentaje });
+                let valorEvaluado = tipo === 'cap' ? m.cap : m.cred;
+                let porcentaje = m.total > 0 ? (valorEvaluado / m.total) * 100 : 0;
+                arrayMesas.push({ mesa: mesa, ie: m.ie, valor: valorEvaluado, total: m.total, pct: porcentaje });
             }
 
             arrayMesas.sort((a, b) => a.pct - b.pct);
+
+            let textoUnidad = tipo === 'cap' ? 'Capacitado' : 'Entregado';
 
             arrayMesas.forEach(item => {
                 let claseEstado = item.pct === 100 ? 'ok' : (item.pct >= 50 ? 'media' : '');
                 let icono = item.pct === 100 ? '✅' : (item.pct === 0 ? '🚨' : '⚠️');
                 
-                // NUEVO: Agregado el evento onclick dinámico que pasa la IE y la MESA
                 contenedor.innerHTML += `
                     <div class="mesa-critica-item ${claseEstado}" onclick="irAMesaDesdeModal('${item.ie}', '${item.mesa}')">
                         <div>
@@ -701,8 +712,8 @@
                             <div style="font-size: 11px; color: #666;">${item.ie}</div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-weight: bold; font-size: 14px;">${icono} ${item.cred} / ${item.total}</div>
-                            <div style="font-size: 11px; color: var(--naranja-alerta);">${item.pct.toFixed(0)}% Entregado</div>
+                            <div style="font-weight: bold; font-size: 14px;">${icono} ${item.valor} / ${item.total}</div>
+                            <div style="font-size: 11px; color: var(--naranja-alerta);">${item.pct.toFixed(0)}% ${textoUnidad}</div>
                         </div>
                     </div>
                 `;
@@ -711,15 +722,12 @@
             document.getElementById('modal-critico').classList.remove('hidden');
         }
 
-        // NUEVA FUNCIÓN: DRILL-DOWN (Navegación Profunda)
         function irAMesaDesdeModal(ie, mesa) {
-            // 1. Cerrar el modal
             document.getElementById('modal-critico').classList.add('hidden');
 
             let idIE = 'ie_' + ie.replace(/[^a-zA-Z0-9]/g, '');
             let idMesa = idIE + '_mesa_' + mesa;
 
-            // 2. Abrir Panel Global si está cerrado
             let panelGlobal = document.getElementById('panel-datos-global');
             if (panelGlobal && panelGlobal.classList.contains('hidden')) {
                 panelGlobal.classList.remove('hidden');
@@ -727,7 +735,6 @@
                 if(flechaG) flechaG.innerText = '▲';
             }
 
-            // 3. Abrir Panel del Colegio (IE) si está cerrado
             let panelIE = document.getElementById(idIE);
             if (panelIE && panelIE.classList.contains('hidden')) {
                 panelIE.classList.remove('hidden');
@@ -735,7 +742,6 @@
                 if(flechaIE) flechaIE.innerText = '▲';
             }
 
-            // 4. Abrir la Mesa Específica y renderizarla
             let btnMesa = document.getElementById('btn_' + idMesa);
             if (btnMesa) {
                 let panelMesa = document.getElementById(idMesa);
@@ -744,13 +750,11 @@
                     let flechaMesa = btnMesa.querySelectorAll('span')[btnMesa.querySelectorAll('span').length - 1];
                     if(flechaMesa) flechaMesa.innerText = '▲';
                     
-                    // Si no había sido cargada en memoria, la dibuja
                     if (panelMesa.innerHTML.trim() === "") {
                         panelMesa.innerHTML = renderizarTarjetasLazy(ie, mesa);
                     }
                 }
 
-                // 5. Hacer Scroll Automático hasta ese botón
                 setTimeout(() => {
                     btnMesa.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 300);
