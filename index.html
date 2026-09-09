@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         :root {
             --azul-onpe: #003366; --celeste-onpe: #4a90e2; --rojo-onpe: #e30613;
-            --verde-miembro: #5cb85c; 
+            --verde-miembro: #5cb85c; --naranja-alerta: #f39c12;
             --gris-fondo: #f4f6f9; --blanco: #ffffff; --texto-oscuro: #333333; --texto-claro: #666666;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,6 +58,7 @@
         .circulo-progreso::before { content: ""; position: absolute; width: 90px; height: 90px; background-color: var(--blanco); border-radius: 50%; }
         .circulo-valor { position: relative; font-size: 24px; font-weight: bold; color: var(--texto-oscuro); }
         .btn-pdf { background-color: var(--rojo-onpe); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-top: 10px; }
+        .btn-pdf-cred { background-color: var(--azul-onpe); margin-top: 20px; }
 
         .btn-acordeon { width: 100%; text-align: left; background: var(--blanco); border: 1px solid #ddd; padding: 15px; font-size: 16px; font-weight: bold; color: var(--azul-onpe); cursor: pointer; border-radius: 8px; margin-bottom: 8px; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 0; margin-bottom: 25px; } 
@@ -83,7 +84,10 @@
         .middle-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
         .main-card { background: var(--blanco); border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .form-area { background: #fcfcfc; border: 1px solid #eee; border-radius: 8px; padding: 12px; }
-        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-bottom: 8px; background: #ffebee; color: var(--rojo-onpe); }
+        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-bottom: 8px; margin-right: 5px; }
+        .badge-rojo { background: #ffebee; color: var(--rojo-onpe); }
+        .badge-verde { background: #e8f5e9; color: #2e7d32; }
+        .badge-naranja { background: #fff3e0; color: #e65100; }
         .form-area select, .form-area input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .btn-guardar { background: var(--azul-onpe); color: var(--blanco); border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
         .admin-input { border: 1px dashed var(--celeste-onpe) !important; background: #f0f7ff !important; font-size: 13px !important; padding: 6px !important; margin-bottom: 5px !important; }
@@ -140,7 +144,7 @@
                             <span class="circulo-valor" id="valor-paragsha">0%</span>
                         </div>
                         <p id="texto-paragsha" style="font-weight: bold; color: var(--texto-claro);">0 / 0</p>
-                        <button class="btn-pdf" id="btn-pdf-seth" onclick="dispararPDF('SETH')">📄 Generar PDF (Paragsha)</button>
+                        <button class="btn-pdf" id="btn-pdf-seth" onclick="dispararPDF('SETH')">📄 Generar Avance (Paragsha)</button>
                     </div>
 
                     <div class="grafico-card goyita">
@@ -149,9 +153,11 @@
                             <span class="circulo-valor" id="valor-resto">0%</span>
                         </div>
                         <p id="texto-resto" style="font-weight: bold; color: var(--texto-claro);">0 / 0</p>
-                        <button class="btn-pdf" id="btn-pdf-goyita" style="background-color: #c00000;" onclick="dispararPDF('GOYITA')">📄 Generar PDF (Distrito)</button>
+                        <button class="btn-pdf" id="btn-pdf-goyita" style="background-color: #c00000;" onclick="dispararPDF('GOYITA')">📄 Generar Avance (Distrito)</button>
                     </div>
                 </div>
+
+                <button class="btn-pdf btn-pdf-cred" onclick="generarPDFCredenciales()">🪪 Descargar Historial de Credenciales Completo</button>
             </div>
 
             <div id="contenedor-resultados"></div>
@@ -200,7 +206,6 @@
             if (fin && Date.now() < fin && ultima) {
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('loading-screen').classList.remove('hidden');
-                
                 document.getElementById('inputBusqueda').value = ultima;
                 consultar(true); 
             } else {
@@ -259,10 +264,15 @@
 
             let estadoActual = col[8] ? col[8].trim() : '';
             let obsActual = col[9] ? col[9].trim() : 'Ninguna';
+            let credActual = col[10] ? col[10].trim() : 'Pendiente'; 
             
             let badgeHtml = (estadoActual && estadoActual !== "No Capacitado") 
-                ? `<div id="badge_${col[1]}" class="status-badge" style="background:#e8f5e9; color:#2e7d32;">Registrado: ${estadoActual}</div>` 
-                : `<div id="badge_${col[1]}" class="status-badge" style="background:#ffebee; color:var(--rojo-onpe);">Sin registrar</div>`;
+                ? `<div id="badge_${col[1]}" class="status-badge badge-verde">Registrado: ${estadoActual}</div>` 
+                : `<div id="badge_${col[1]}" class="status-badge badge-rojo">Sin registrar</div>`;
+
+            let badgeCred = (credActual === "Entregada")
+                ? `<div id="badge_cred_${col[1]}" class="status-badge badge-verde">🪪 Credencial: Entregada</div>`
+                : `<div id="badge_cred_${col[1]}" class="status-badge badge-naranja">🪪 Credencial: Pendiente</div>`;
 
             let dirTexto = (col[6] && col[6].trim() !== "") ? col[6] : 'No especificada';
             let celTexto = (col[5] && col[5].trim() !== "") ? col[5] : 'Sin número';
@@ -306,12 +316,13 @@
                     </div>
                     <div class="middle-section">
                         <div class="main-card">
-                            <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Capacitación</h3>
+                            <h3 style="color:var(--celeste-onpe); font-size:14px; margin-bottom:10px;">Control Operativo</h3>
                             <div class="form-area">
-                                ${badgeHtml}
+                                <div>${badgeHtml} ${badgeCred}</div>
                                 <div id="obs_text_${col[1]}" style="font-size:11px; color:#666; margin-bottom:8px;">Obs. actuales: ${obsActual}</div>
+                                
                                 <select id="cap_${col[1]}">
-                                    <option value="">Actualizar estado a...</option>
+                                    <option value="">Actualizar Capacitación...</option>
                                     <option value="1ra Jornada">1ra Jornada</option>
                                     <option value="2da Jornada">2da Jornada</option>
                                     <option value="Personalizada - Local">Personalizada - Local</option>
@@ -319,8 +330,15 @@
                                     <option value="Virtual">Virtual</option>
                                     <option value="No Capacitado">No Capacitado</option>
                                 </select>
+
+                                <select id="cred_${col[1]}">
+                                    <option value="">Actualizar Credencial...</option>
+                                    <option value="Entregada">Entregada</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                </select>
+
                                 <input type="text" id="obs_${col[1]}" value="${obsActual !== 'Ninguna' ? obsActual : ''}" placeholder="Observación (Dejar en blanco para borrar)">
-                                <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar Datos</button>
+                                <button class="btn-guardar" id="btn_${col[1]}" onclick="guardar('${col[1]}')">Actualizar Todo</button>
                                 <p id="msg_${col[1]}" style="text-align:center; font-size:12px; font-weight:bold; margin-top:8px;"></p>
                             </div>
                         </div>
@@ -422,7 +440,6 @@
                 }
             });
 
-            // MODIFICACIÓN: ORDENAMIENTO PERSONALIZADO
             const ordenDeseado = [
                 "IE INTEGRADO 34033 MAVILO CALERO PEREZ PLANTA B",
                 "IEI TRECE DE MAYO",
@@ -540,55 +557,67 @@
             };
         }
 
-        // MODIFICACIÓN: CONTROL DE BORRADO DE OBSERVACIONES
         function guardar(dniTarget) {
-            const selectCap = document.getElementById('cap_' + dniTarget);
-            const cap = selectCap.value;
+            const cap = document.getElementById('cap_' + dniTarget).value;
+            const cred = document.getElementById('cred_' + dniTarget).value; 
             const obsInput = document.getElementById('obs_' + dniTarget).value.trim();
             const msj = document.getElementById('msg_' + dniTarget);
             const btn = document.getElementById('btn_' + dniTarget);
+
+            if(cap === "" && obsInput === "" && cred === "") {
+                msj.style.color = 'red'; msj.innerText = 'No seleccionaste qué actualizar.';
+                return setTimeout(() => { msj.innerText = ''; }, 2500);
+            }
 
             msj.style.color = 'var(--azul-onpe)'; msj.innerText = 'Guardando...'; 
             btn.disabled = true;
 
             const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
             let capEnvio = cap;
-            let obsEnvio = obsInput === "" ? " " : obsInput; // Enviará espacio para borrar si está vacío
+            let credEnvio = cred;
+            let obsEnvio = obsInput === "" ? " " : obsInput; 
             
             if(index !== -1) {
                 let colArray = baseDeDatos[index].split(',');
-                while(colArray.length < 10) colArray.push('');
+                while(colArray.length < 12) colArray.push('');
                 
-                if(cap === "") capEnvio = colArray[8]; 
-                else colArray[8] = cap; 
+                if(cap === "") capEnvio = colArray[8]; else colArray[8] = cap; 
+                if(cred === "") credEnvio = (colArray[10] ? colArray[10] : 'Pendiente'); else colArray[10] = cred;
                 
                 colArray[9] = obsEnvio;
                 baseDeDatos[index] = colArray.join(',');
 
                 let badgeDOM = document.getElementById('badge_' + dniTarget);
+                let badgeCredDOM = document.getElementById('badge_cred_' + dniTarget);
                 let obsDOM = document.getElementById('obs_text_' + dniTarget);
                 
                 if (capEnvio && capEnvio !== "No Capacitado" && capEnvio.trim() !== "") {
-                    badgeDOM.style.background = '#e8f5e9';
-                    badgeDOM.style.color = '#2e7d32';
+                    badgeDOM.className = 'status-badge badge-verde';
                     badgeDOM.innerText = 'Registrado: ' + capEnvio;
                 } else {
-                    badgeDOM.style.background = '#ffebee';
-                    badgeDOM.style.color = 'var(--rojo-onpe)';
+                    badgeDOM.className = 'status-badge badge-rojo';
                     badgeDOM.innerText = 'Sin registrar';
+                }
+
+                if (credEnvio === "Entregada") {
+                    badgeCredDOM.className = 'status-badge badge-verde';
+                    badgeCredDOM.innerText = '🪪 Credencial: Entregada';
+                } else {
+                    badgeCredDOM.className = 'status-badge badge-naranja';
+                    badgeCredDOM.innerText = '🪪 Credencial: Pendiente';
                 }
                 
                 obsDOM.innerText = 'Obs. actuales: ' + (obsInput === "" ? 'Ninguna' : obsInput);
             }
             actualizarGraficosCirculares(); 
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=&dir=`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=&dir=&cred=${encodeURIComponent(credEnvio)}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { 
-                msj.style.color = '#2e7d32'; 
-                msj.innerText = '¡Actualizado con éxito!'; 
-                selectCap.value = ''; 
+                msj.style.color = '#2e7d32'; msj.innerText = '¡Actualizado con éxito!'; 
+                document.getElementById('cap_' + dniTarget).value = ''; 
+                document.getElementById('cred_' + dniTarget).value = ''; 
             })
             .catch(() => { msj.style.color = 'red'; msj.innerText = 'Error al guardar.'; })
             .finally(() => { btn.disabled = false; setTimeout(() => { msj.innerText = ''; }, 3000); });
@@ -605,16 +634,17 @@
             btnG.disabled = true; btnD.disabled = true;
 
             const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
-            let capEnvio = '', obsEnvio = '';
+            let capEnvio = '', obsEnvio = '', credEnvio = 'Pendiente';
 
             let celEnvio = cel === "" ? " " : cel; 
             let dirEnvio = dir === "" ? " " : dir;
 
             if(index !== -1) {
                 let colArray = baseDeDatos[index].split(',');
-                while(colArray.length < 10) colArray.push('');
+                while(colArray.length < 12) colArray.push('');
                 capEnvio = colArray[8]; 
                 obsEnvio = colArray[9];
+                credEnvio = colArray[10] || 'Pendiente';
                 
                 colArray[5] = celEnvio; 
                 colArray[6] = dirEnvio;
@@ -624,7 +654,7 @@
                 document.getElementById('lbl_dir_' + dniTarget).innerText = dir === "" ? 'No especificada' : dir;
             }
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(celEnvio)}&dir=${encodeURIComponent(dirEnvio)}`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(celEnvio)}&dir=${encodeURIComponent(dirEnvio)}&cred=${encodeURIComponent(credEnvio)}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Contacto guardado!'; })
@@ -644,13 +674,14 @@
             btnG.disabled = true; btnD.disabled = true;
 
             const index = baseDeDatos.findIndex(f => f.split(',')[1] && f.split(',')[1].trim() === dniTarget);
-            let capEnvio = '', obsEnvio = '';
+            let capEnvio = '', obsEnvio = '', credEnvio = 'Pendiente';
             
             if(index !== -1) {
                 let colArray = baseDeDatos[index].split(',');
-                while(colArray.length < 10) colArray.push('');
+                while(colArray.length < 12) colArray.push('');
                 capEnvio = colArray[8]; 
                 obsEnvio = colArray[9];
+                credEnvio = colArray[10] || 'Pendiente';
                 
                 colArray[5] = ' '; 
                 colArray[6] = ' ';
@@ -660,7 +691,7 @@
                 document.getElementById('lbl_dir_' + dniTarget).innerText = 'No especificada';
             }
 
-            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(" ")}&dir=${encodeURIComponent(" ")}`;
+            const urlEnvio = `${SCRIPT_URL}?dni=${dniTarget}&cap=${encodeURIComponent(capEnvio)}&obs=${encodeURIComponent(obsEnvio)}&cel=${encodeURIComponent(" ")}&dir=${encodeURIComponent(" ")}&cred=${encodeURIComponent(credEnvio)}`;
 
             fetch(urlEnvio, { mode: 'no-cors' })
             .then(() => { msj.style.color = '#2e7d32'; msj.innerText = '¡Datos borrados!'; })
@@ -693,12 +724,63 @@
             html2pdf().set(opciones).from(elemento).save();
         }
 
+        function generarPDFCredenciales() {
+            let fechaHoy = new Date().toLocaleDateString('es-PE');
+            let html = `<div style="padding: 40px; font-family: Arial, sans-serif; color: #333;">
+                <h2 style="color: #003366; text-align: center; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Reporte Consolidado: Entrega de Credenciales</h2>
+                <p style="text-align: right; font-size: 14px; color: #666;">Distrito Simón Bolívar | Fecha: ${fechaHoy}</p>`;
+
+            let datosAgrupados = {};
+            
+            baseDeDatos.forEach(fila => {
+                const col = fila.split(',');
+                if (col.length >= 8) {
+                    let ie = col[7] ? col[7].trim() : 'SIN LOCAL';
+                    let mesa = col[0] ? col[0].trim() : '000000';
+                    let cred = col[10] ? col[10].trim() : 'Pendiente'; 
+
+                    if (usuarioActual === 'SETH' && !ie.toUpperCase().includes("SAN ANDRES")) return;
+                    if (usuarioActual === 'GOYITA' && ie.toUpperCase().includes("SAN ANDRES")) return;
+
+                    if (!datosAgrupados[ie]) datosAgrupados[ie] = {};
+                    if (!datosAgrupados[ie][mesa]) datosAgrupados[ie][mesa] = { entregadas: 0, pendientes: 0 };
+                    
+                    if (cred === 'Entregada') datosAgrupados[ie][mesa].entregadas++;
+                    else datosAgrupados[ie][mesa].pendientes++;
+                }
+            });
+
+            Object.keys(datosAgrupados).sort().forEach(ie => {
+                html += `<h3 style="color: #4a90e2; margin-top: 25px; font-size: 18px;">🏫 ${ie}</h3>`;
+                Object.keys(datosAgrupados[ie]).sort().forEach(mesa => {
+                    let stats = datosAgrupados[ie][mesa];
+                    html += `<div style="margin-left: 20px; font-size: 15px; border-bottom: 1px solid #eee; padding: 8px 0;">
+                        🗳️ Mesa N° ${mesa}: <strong style="color: #2e7d32;">${stats.entregadas} Entregadas</strong> / <span style="color: #e65100;">${stats.pendientes} Pendientes</span>
+                    </div>`;
+                });
+            });
+
+            html += `</div>`;
+            
+            let contenedorTemporal = document.getElementById('pdf-credenciales-temp');
+            if (!contenedorTemporal) {
+                contenedorTemporal = document.createElement('div');
+                contenedorTemporal.id = 'pdf-credenciales-temp';
+                contenedorTemporal.style.position = 'absolute';
+                contenedorTemporal.style.left = '-9999px';
+                document.body.appendChild(contenedorTemporal);
+            }
+            contenedorTemporal.innerHTML = html;
+
+            let opciones = { margin: 15, filename: `Historial_Credenciales_${fechaHoy}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            html2pdf().set(opciones).from(contenedorTemporal).save();
+        }
+
         function cambiarPantalla() {
             document.getElementById('loading-screen').classList.add('hidden');
             document.body.classList.remove('login-bg'); 
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('hidden');
-            
             document.getElementById('inputBusqueda').value = '';
             document.getElementById('btnConsultarPrincipal').classList.remove('listo');
             document.getElementById('mensaje-login').innerText = '';
@@ -713,10 +795,8 @@
             document.body.classList.add('login-bg'); 
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
-            
             document.getElementById('inputBusqueda').value = '';
             document.getElementById('btnConsultarPrincipal').classList.remove('listo');
-            
             usuarioActual = ''; baseDeDatos = [];
         }
     </script>
