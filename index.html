@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard ONPE - Simón Bolívar</title>
+    <title>ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -63,7 +63,6 @@
         .circulo-progreso::before { content: ""; position: absolute; width: 76px; height: 76px; background-color: var(--blanco); border-radius: 50%; }
         .circulo-valor { position: relative; font-size: 18px; font-weight: bold; color: var(--texto-oscuro); }
         
-        /* Efecto interactivo para el KPI de credenciales */
         .kpi-interactivo { cursor: pointer; transition: transform 0.2s; padding: 5px; border-radius: 8px; border: 1px dashed transparent; }
         .kpi-interactivo:hover { transform: scale(1.05); border-color: var(--naranja-alerta); background-color: var(--naranja-claro); }
 
@@ -83,7 +82,10 @@
         .modal-header h3 { color: var(--naranja-alerta); margin: 0; font-size: 18px; }
         .btn-cerrar { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
         .lista-critica { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
-        .mesa-critica-item { display: flex; justify-content: space-between; align-items: center; background: #fff8f0; padding: 12px; border-radius: 8px; border-left: 4px solid var(--rojo-onpe); }
+        
+        /* Nuevo estilo para hacer clic en las mesas críticas */
+        .mesa-critica-item { display: flex; justify-content: space-between; align-items: center; background: #fff8f0; padding: 12px; border-radius: 8px; border-left: 4px solid var(--rojo-onpe); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .mesa-critica-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .mesa-critica-item.media { border-left-color: var(--naranja-alerta); }
         .mesa-critica-item.ok { border-left-color: var(--verde-miembro); background: #e8f5e9; }
         
@@ -239,7 +241,7 @@
         let baseDeDatos = []; 
         let usuarioActual = ''; 
         let intervaloReloj;
-        let reporteMesasCriticas = {}; // Guarda datos calculados para acceso rápido
+        let reporteMesasCriticas = {}; 
 
         document.addEventListener('DOMContentLoaded', () => {
             const inputBusq = document.getElementById('inputBusqueda');
@@ -601,7 +603,6 @@
             let s_Total = 0, s_Cap = 0, s_Cred = 0;
             let r_Total = 0, r_Cap = 0, r_Cred = 0;
             
-            // Reiniciar reporte crítico local
             reporteMesasCriticas = { 'SETH': {}, 'GOYITA': {} };
 
             baseDeDatos.forEach(fila => {
@@ -614,7 +615,6 @@
                     
                     const zona = institucion.includes("SAN ANDRES") ? 'SETH' : 'GOYITA';
 
-                    // Lógica Global
                     if (zona === 'SETH') {
                         s_Total++; 
                         if(estaCapacitado) s_Cap++;
@@ -625,7 +625,6 @@
                         if(tieneCredencial) r_Cred++;
                     }
 
-                    // Lógica por Mesa (Para el Modal Crítico y badges del Acordeón)
                     if (!reporteMesasCriticas[zona][mesa]) {
                         reporteMesasCriticas[zona][mesa] = { ie: col[7].trim(), total: 0, cred: 0 };
                     }
@@ -634,7 +633,6 @@
                 }
             });
 
-            // Actualizar vista Paragsha (SETH)
             const pct_s_Cap = s_Total > 0 ? ((s_Cap / s_Total) * 100).toFixed(1) : 0;
             const pct_s_Cred = s_Total > 0 ? ((s_Cred / s_Total) * 100).toFixed(1) : 0;
             document.getElementById('circulo-paragsha-cap').style.setProperty('--porcentaje', `${pct_s_Cap}%`);
@@ -645,7 +643,6 @@
             document.getElementById('valor-paragsha-cred').innerText = `${pct_s_Cred}%`;
             document.getElementById('texto-paragsha-cred').innerText = `${s_Cred} / ${s_Total}`;
 
-            // Actualizar vista Resto (GOYITA)
             const pct_r_Cap = r_Total > 0 ? ((r_Cap / r_Total) * 100).toFixed(1) : 0;
             const pct_r_Cred = r_Total > 0 ? ((r_Cred / r_Total) * 100).toFixed(1) : 0;
             document.getElementById('circulo-resto-cap').style.setProperty('--porcentaje', `${pct_r_Cap}%`);
@@ -661,7 +658,6 @@
                 resto: { cap: r_Cap, total: r_Total } 
             };
 
-            // Inyectar el avance directo en los botones del acordeón (Indicador por Mesa)
             let datosZona = reporteMesasCriticas[usuarioActual];
             if(datosZona) {
                 Object.keys(datosZona).forEach(m => {
@@ -678,12 +674,10 @@
             }
         }
 
-        // LÓGICA DEL PANEL CRÍTICO INTERACTIVO
         function abrirModalCritico(zona) {
             let contenedor = document.getElementById('contenido-mesas-criticas');
             contenedor.innerHTML = '';
             
-            // Array para ordenar
             let arrayMesas = [];
             let objZona = reporteMesasCriticas[zona];
             
@@ -693,15 +687,15 @@
                 arrayMesas.push({ mesa: mesa, ie: m.ie, cred: m.cred, total: m.total, pct: porcentaje });
             }
 
-            // Ordenamos: Menor porcentaje primero (Las más críticas arriba)
             arrayMesas.sort((a, b) => a.pct - b.pct);
 
             arrayMesas.forEach(item => {
                 let claseEstado = item.pct === 100 ? 'ok' : (item.pct >= 50 ? 'media' : '');
                 let icono = item.pct === 100 ? '✅' : (item.pct === 0 ? '🚨' : '⚠️');
                 
+                // NUEVO: Agregado el evento onclick dinámico que pasa la IE y la MESA
                 contenedor.innerHTML += `
-                    <div class="mesa-critica-item ${claseEstado}">
+                    <div class="mesa-critica-item ${claseEstado}" onclick="irAMesaDesdeModal('${item.ie}', '${item.mesa}')">
                         <div>
                             <strong style="font-size: 15px; color: var(--azul-onpe);">Mesa ${item.mesa}</strong>
                             <div style="font-size: 11px; color: #666;">${item.ie}</div>
@@ -715,6 +709,52 @@
             });
 
             document.getElementById('modal-critico').classList.remove('hidden');
+        }
+
+        // NUEVA FUNCIÓN: DRILL-DOWN (Navegación Profunda)
+        function irAMesaDesdeModal(ie, mesa) {
+            // 1. Cerrar el modal
+            document.getElementById('modal-critico').classList.add('hidden');
+
+            let idIE = 'ie_' + ie.replace(/[^a-zA-Z0-9]/g, '');
+            let idMesa = idIE + '_mesa_' + mesa;
+
+            // 2. Abrir Panel Global si está cerrado
+            let panelGlobal = document.getElementById('panel-datos-global');
+            if (panelGlobal && panelGlobal.classList.contains('hidden')) {
+                panelGlobal.classList.remove('hidden');
+                let flechaG = panelGlobal.previousElementSibling.querySelector('span');
+                if(flechaG) flechaG.innerText = '▲';
+            }
+
+            // 3. Abrir Panel del Colegio (IE) si está cerrado
+            let panelIE = document.getElementById(idIE);
+            if (panelIE && panelIE.classList.contains('hidden')) {
+                panelIE.classList.remove('hidden');
+                let flechaIE = panelIE.previousElementSibling.querySelector('span');
+                if(flechaIE) flechaIE.innerText = '▲';
+            }
+
+            // 4. Abrir la Mesa Específica y renderizarla
+            let btnMesa = document.getElementById('btn_' + idMesa);
+            if (btnMesa) {
+                let panelMesa = document.getElementById(idMesa);
+                if (panelMesa && panelMesa.classList.contains('hidden')) {
+                    panelMesa.classList.remove('hidden');
+                    let flechaMesa = btnMesa.querySelectorAll('span')[btnMesa.querySelectorAll('span').length - 1];
+                    if(flechaMesa) flechaMesa.innerText = '▲';
+                    
+                    // Si no había sido cargada en memoria, la dibuja
+                    if (panelMesa.innerHTML.trim() === "") {
+                        panelMesa.innerHTML = renderizarTarjetasLazy(ie, mesa);
+                    }
+                }
+
+                // 5. Hacer Scroll Automático hasta ese botón
+                setTimeout(() => {
+                    btnMesa.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
         }
 
         function cerrarModalCritico(e) {
@@ -970,7 +1010,7 @@
             let html = `<div style="padding: 30px; font-family: Arial, sans-serif; color: #333;">
                 <h2 style="color: #003366; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Historial de Credenciales - Mesa ${mesa}</h2>
                 <p><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
-                <div style="margin-top: 20px;">`; // Sin tablas por restricción
+                <div style="margin-top: 20px;">`; 
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
