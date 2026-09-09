@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DONPE - Simón Bolívar</title>
+    <title>ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -215,6 +215,7 @@
         </div>
     </div>
 
+    <!-- EL CONTENEDOR OCULTO ORIGINAL DE METAS -->
     <div class="pdf-offscreen">
         <div id="reporte-pdf" style="position: relative; width: 1122px; height: 793px; background-image: url('metas.jpg'); background-size: contain; background-repeat: no-repeat; font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #333;">
             <div id="pdf-distrito" style="position: absolute; top: 320px; left: 180px;"></div>
@@ -956,13 +957,18 @@
         }
 
         function generarPDFCredenciales() {
-            const URL_BANNER = 'credencial.jpg'; 
+            // URL Absoluta Automática para GitHub Pages (Carga la imagen sin fallar)
+            let rutaBase = window.location.href.split('?')[0].replace('index.html', '');
+            if (!rutaBase.endsWith('/')) rutaBase += '/';
+            const URL_BANNER = rutaBase + 'credencial.jpg'; 
             
             let fechaHoy = new Date().toLocaleDateString('es-PE');
             let zonaNombre = usuarioActual === 'SETH' ? 'Centro Poblado Paragsha' : 'Distrito Simón Bolívar';
             
-            let html = `<div style="padding: 20px; font-family: Arial, sans-serif; color: #333;">
-                <img src="${URL_BANNER}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 15px;">
+            let html = `<div style="padding: 20px; font-family: Arial, sans-serif; color: #333; background: #fff;">
+                <div style="text-align:center; margin-bottom: 20px;">
+                    <img src="${URL_BANNER}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;">
+                </div>
                 <h2 style="color: #003366; text-align: center; font-size: 18px; margin-bottom: 5px;">Padrón Operativo: ${zonaNombre}</h2>
                 <p style="text-align: right; font-size: 12px; color: #666; margin-bottom: 20px; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Fecha de emisión: ${fechaHoy}</p>`;
 
@@ -989,50 +995,37 @@
                 }
             });
 
+            // Se usa TABLE pura de HTML5 en vez de Flexbox para evitar que se deforme en el PDF
+            html += `<table style="width: 100%; border-collapse: collapse;">`;
             Object.keys(padron).sort().forEach(ie => {
-                html += `<div style="page-break-inside: avoid; margin-top: 15px;">
-                            <h3 style="background: var(--azul-onpe); color: white; margin: 0; padding: 10px; font-size: 15px; border-radius: 6px 6px 0 0;">🏫 ${ie}</h3>
-                         </div>`;
+                html += `<tr style="page-break-inside: avoid;"><td colspan="3" style="background: var(--azul-onpe); color: white; padding: 10px; font-size: 15px; border-radius: 6px 6px 0 0; margin-top: 15px;">🏫 ${ie}</td></tr>`;
                 
                 Object.keys(padron[ie]).sort().forEach(mesa => {
-                    html += `<div style="page-break-inside: avoid; border: 1px solid #ddd; border-top: none; margin-bottom: 15px; border-radius: 0 0 6px 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <div style="background: #f4f6f9; color: var(--azul-onpe); font-size: 14px; font-weight: bold; padding: 8px 10px; border-left: 4px solid var(--rojo-onpe);">🗳️ Mesa N° ${mesa}</div>`;
+                    html += `<tr style="page-break-inside: avoid;"><td colspan="3" style="background: #f4f6f9; color: var(--azul-onpe); font-size: 14px; font-weight: bold; padding: 8px 10px; border-left: 4px solid var(--rojo-onpe); border-bottom: 1px solid #ddd;">🗳️ Mesa N° ${mesa}</td></tr>`;
                     
                     padron[ie][mesa].forEach(miembro => {
                         let colorCred = miembro.cred === 'Entregada' ? '#2e7d32' : '#e65100';
                         let iconoCred = miembro.cred === 'Entregada' ? '✅' : '⚠️';
                         
                         html += `
-                        <div style="display: flex; border-top: 1px solid #eee; padding: 8px 10px; align-items: center; background: #fff;">
-                            <div style="width: 45%; font-size: 12px; line-height: 1.3;">
+                        <tr style="page-break-inside: avoid; background: #fff;">
+                            <td style="width: 50%; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 12px; line-height: 1.3;">
                                 <strong style="color: #333;">${miembro.nombres}</strong><br>
                                 <span style="color: #666; font-size: 10px;">${miembro.cargo}</span>
-                            </div>
-                            <div style="width: 25%; font-size: 12px; text-align: center; color: #555;">
+                            </td>
+                            <td style="width: 25%; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #555;">
                                 📱 ${miembro.celular}
-                            </div>
-                            <div style="width: 30%; font-size: 12px; text-align: right; font-weight: bold; color: ${colorCred};">
+                            </td>
+                            <td style="width: 25%; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: right; font-weight: bold; color: ${colorCred};">
                                 ${iconoCred} ${miembro.cred}
-                            </div>
-                        </div>`;
+                            </td>
+                        </tr>`;
                     });
-                    
-                    html += `</div>`; 
                 });
             });
-
-            html += `</div>`;
+            html += `</table></div>`;
             
-            let contenedorTemporal = document.getElementById('pdf-credenciales-temp');
-            if (!contenedorTemporal) {
-                contenedorTemporal = document.createElement('div');
-                contenedorTemporal.id = 'pdf-credenciales-temp';
-                contenedorTemporal.style.position = 'absolute';
-                contenedorTemporal.style.left = '-9999px';
-                document.body.appendChild(contenedorTemporal);
-            }
-            contenedorTemporal.innerHTML = html;
-
+            // Renderizado Directo a Memoria (Evita el bug del celular en blanco)
             let opciones = { 
                 margin: 10, 
                 filename: `Padron_Credenciales_${fechaHoy}.pdf`, 
@@ -1041,16 +1034,17 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            html2pdf().set(opciones).from(contenedorTemporal).save();
+            html2pdf().set(opciones).from(html).save();
         }
 
         function generarPDFMesa(mesa, ie) {
             let fechaHoy = new Date().toLocaleDateString('es-PE');
-            let html = `<div style="padding: 30px; font-family: Arial, sans-serif; color: #333;">
+            let html = `<div style="padding: 30px; font-family: Arial, sans-serif; color: #333; background: #fff;">
                 <h2 style="color: #003366; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Historial Operativo - Mesa ${mesa}</h2>
                 <p style="font-size: 14px;"><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
-                <div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); page-break-inside: avoid;">
-                    <div style="background: #f4f6f9; color: var(--azul-onpe); font-size: 14px; font-weight: bold; padding: 8px 10px; border-bottom: 1px solid #ddd; border-radius: 6px 6px 0 0;">🗳️ Detalles de la Mesa N° ${mesa}</div>`; 
+                <div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="background: #f4f6f9; color: var(--azul-onpe); font-size: 14px; font-weight: bold; padding: 8px 10px; border-bottom: 1px solid #ddd; border-radius: 6px 6px 0 0;">🗳️ Detalles de la Mesa N° ${mesa}</div>
+                    <table style="width: 100%; border-collapse: collapse;">`; 
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
@@ -1060,35 +1054,25 @@
                     let iconoCred = cred === 'Entregada' ? '✅' : '⚠️';
                     
                     html += `
-                    <div style="display: flex; border-bottom: 1px solid #eee; padding: 10px; align-items: center; background: #fff;">
-                        <div style="width: 45%; font-size: 12px; line-height: 1.3;">
+                    <tr style="background: #fff;">
+                        <td style="width: 50%; padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; line-height: 1.3;">
                             <strong style="color: #333;">${col[2]} ${col[3]}</strong><br>
                             <span style="color: #666; font-size: 10px;">${col[4]} - DNI: ${col[1]}</span>
-                        </div>
-                        <div style="width: 25%; font-size: 12px; text-align: center; color: #555;">
+                        </td>
+                        <td style="width: 25%; padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #555;">
                             📱 ${col[5] && col[5].trim() !== "" ? col[5] : 'Sin número'}
-                        </div>
-                        <div style="width: 30%; font-size: 12px; text-align: right; font-weight: bold; color: ${colorCred};">
+                        </td>
+                        <td style="width: 25%; padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: right; font-weight: bold; color: ${colorCred};">
                             ${iconoCred} ${cred}
-                        </div>
-                    </div>`;
+                        </td>
+                    </tr>`;
                 }
             });
 
-            html += `</div></div>`;
-
-            let contenedorTemporal = document.getElementById('pdf-mesa-temp');
-            if (!contenedorTemporal) {
-                contenedorTemporal = document.createElement('div');
-                contenedorTemporal.id = 'pdf-mesa-temp';
-                contenedorTemporal.style.position = 'absolute';
-                contenedorTemporal.style.left = '-9999px';
-                document.body.appendChild(contenedorTemporal);
-            }
-            contenedorTemporal.innerHTML = html;
+            html += `</table></div></div>`;
 
             let opciones = { margin: 15, filename: `Operativo_Mesa_${mesa}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-            html2pdf().set(opciones).from(contenedorTemporal).save();
+            html2pdf().set(opciones).from(html).save();
         }
 
         function cambiarPantalla() {
