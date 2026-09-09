@@ -1015,17 +1015,22 @@
         }
 
         function generarPDFMesa(mesa, ie) {
+            let rutaBase = window.location.href.split('?')[0].replace('index.html', '');
+            if (!rutaBase.endsWith('/')) rutaBase += '/';
+            const URL_BANNER = rutaBase + 'credencial.jpg';
+
             let fechaHoy = new Date().toLocaleDateString('es-PE');
             
-            // Este HTML se envía directo al motor del PDF sin usar tablas de cálculo
-            let html = `<div style="padding: 30px; font-family: Arial, sans-serif; color: #333; background: #fff;">
+            let html = `<div style="padding: 40px; font-family: Arial, sans-serif; color: #333; background: #fff; width: 1042px; height: 713px; box-sizing: border-box;">
                 <div style="text-align:center; margin-bottom: 20px;">
-                    <img src="credencial.jpg" style="width: 100%; height: auto; border-radius: 8px;">
+                    <img src="${URL_BANNER}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px;">
                 </div>
-                <h2 style="color: #003366; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Historial Operativo - Mesa ${mesa}</h2>
-                <p style="font-size: 14px;"><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
-                <div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <div style="background: #f4f6f9; color: var(--azul-onpe); font-size: 14px; font-weight: bold; padding: 8px 10px; border-bottom: 1px solid #ddd; border-radius: 6px 6px 0 0;">🗳️ Detalles de la Mesa N° ${mesa}</div>`; 
+                <h2 style="color: #003366; border-bottom: 3px solid #e30613; padding-bottom: 10px; font-size: 24px;">Historial Operativo - Mesa ${mesa}</h2>
+                <p style="font-size: 16px;"><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
+                
+                <div style="margin-top: 30px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); overflow: hidden;">
+                    <div style="background: #f4f6f9; color: var(--azul-onpe); font-size: 18px; font-weight: bold; padding: 12px 15px; border-bottom: 2px solid #ddd;">🗳️ Detalles de la Mesa N° ${mesa}</div>
+                    <div style="display: flex; flex-direction: column;">`; 
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
@@ -1035,31 +1040,41 @@
                     let iconoCred = cred === 'Entregada' ? '✅' : '⚠️';
                     
                     html += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px; background: #fff;">
-                        <div style="width: 50%; font-size: 12px; line-height: 1.3;">
-                            <strong style="color: #333;">${col[2]} ${col[3]}</strong><br>
-                            <span style="color: #666; font-size: 10px;">${col[4]} - DNI: ${col[1]}</span>
+                    <div style="display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 15px; background: #fff;">
+                        <div style="width: 50%; font-size: 15px; line-height: 1.4;">
+                            <strong style="color: #333; font-size: 16px;">${col[2]} ${col[3]}</strong><br>
+                            <span style="color: #666; font-size: 13px;">${col[4]} - DNI: ${col[1]}</span>
                         </div>
-                        <div style="width: 25%; font-size: 12px; text-align: center; color: #555;">
+                        <div style="width: 25%; font-size: 15px; text-align: center; color: #555;">
                             📱 ${col[5] && col[5].trim() !== "" ? col[5] : 'Sin número'}
                         </div>
-                        <div style="width: 25%; font-size: 12px; text-align: right; font-weight: bold; color: ${colorCred};">
+                        <div style="width: 25%; font-size: 15px; text-align: right; font-weight: bold; color: ${colorCred};">
                             ${iconoCred} ${cred}
                         </div>
                     </div>`;
                 }
             });
 
-            html += `</div></div>`;
+            html += `</div></div></div>`;
+
+            let contenedorTemporal = document.getElementById('pdf-mesa-temp');
+            if (!contenedorTemporal) {
+                contenedorTemporal = document.createElement('div');
+                contenedorTemporal.id = 'pdf-mesa-temp';
+                contenedorTemporal.style.position = 'absolute';
+                contenedorTemporal.style.left = '-9999px';
+                document.body.appendChild(contenedorTemporal);
+            }
+            contenedorTemporal.innerHTML = html;
 
             let opciones = { 
-                margin: 15, 
+                margin: 0, 
                 filename: `Operativo_Mesa_${mesa}.pdf`, 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true }, 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+                jsPDF: { unit: 'px', format: [1122, 793], orientation: 'landscape' } 
             };
-            html2pdf().set(opciones).from(html).save();
+            html2pdf().set(opciones).from(contenedorTemporal).save();
         }
 
         function cambiarPantalla() {
