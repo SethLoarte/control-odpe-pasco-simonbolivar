@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DONPE - Simón Bolívar</title>
+    <title>ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -1021,16 +1021,20 @@
 
             let fechaHoy = new Date().toLocaleDateString('es-PE');
             
-            let html = `<div style="padding: 40px; font-family: Arial, sans-serif; color: #333; background: #fff; width: 1042px; height: 713px; box-sizing: border-box;">
-                <div style="text-align:center; margin-bottom: 20px;">
-                    <img src="${URL_BANNER}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px;">
+            let html = `<div style="padding: 20px; font-family: Arial, sans-serif; background: #fff;">
+                <div style="text-align:center; margin-bottom: 15px;">
+                    <img src="${URL_BANNER}" style="width: 100%; height: auto; max-height: 140px; object-fit: cover; border-radius: 8px;">
                 </div>
-                <h2 style="color: #003366; border-bottom: 3px solid #e30613; padding-bottom: 10px; font-size: 24px;">Historial Operativo - Mesa ${mesa}</h2>
-                <p style="font-size: 16px;"><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
+                <h2 style="color: #003366; border-bottom: 2px solid #e30613; padding-bottom: 10px; margin-top: 0;">Historial Operativo - Mesa ${mesa}</h2>
+                <p style="font-size: 14px; color: #333;"><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
                 
-                <div style="margin-top: 30px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); overflow: hidden;">
-                    <div style="background: #f4f6f9; color: var(--azul-onpe); font-size: 18px; font-weight: bold; padding: 12px 15px; border-bottom: 2px solid #ddd;">🗳️ Detalles de la Mesa N° ${mesa}</div>
-                    <div style="display: flex; flex-direction: column;">`; 
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <thead>
+                        <tr style="page-break-inside: avoid;">
+                            <td colspan="3" style="background: #f4f6f9; color: var(--azul-onpe); font-size: 16px; font-weight: bold; padding: 10px 15px; border-left: 4px solid var(--rojo-onpe); border-bottom: 2px solid #ddd;">🗳️ Detalles de la Mesa N° ${mesa}</td>
+                        </tr>
+                    </thead>
+                    <tbody>`; 
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
@@ -1040,41 +1044,32 @@
                     let iconoCred = cred === 'Entregada' ? '✅' : '⚠️';
                     
                     html += `
-                    <div style="display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 15px; background: #fff;">
-                        <div style="width: 50%; font-size: 15px; line-height: 1.4;">
-                            <strong style="color: #333; font-size: 16px;">${col[2]} ${col[3]}</strong><br>
-                            <span style="color: #666; font-size: 13px;">${col[4]} - DNI: ${col[1]}</span>
-                        </div>
-                        <div style="width: 25%; font-size: 15px; text-align: center; color: #555;">
-                            📱 ${col[5] && col[5].trim() !== "" ? col[5] : 'Sin número'}
-                        </div>
-                        <div style="width: 25%; font-size: 15px; text-align: right; font-weight: bold; color: ${colorCred};">
-                            ${iconoCred} ${cred}
-                        </div>
-                    </div>`;
+                        <tr style="page-break-inside: avoid; background: #fff;">
+                            <td style="width: 50%; padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; line-height: 1.4;">
+                                <strong style="color: #333;">${col[2]} ${col[3]}</strong><br>
+                                <span style="color: #666; font-size: 11px;">${col[4]} - DNI: ${col[1]}</span>
+                            </td>
+                            <td style="width: 25%; padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; text-align: center; color: #555;">
+                                📱 ${col[5] && col[5].trim() !== "" ? col[5] : 'Sin número'}
+                            </td>
+                            <td style="width: 25%; padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; text-align: right; font-weight: bold; color: ${colorCred};">
+                                ${iconoCred} ${cred}
+                            </td>
+                        </tr>`;
                 }
             });
 
-            html += `</div></div></div>`;
-
-            let contenedorTemporal = document.getElementById('pdf-mesa-temp');
-            if (!contenedorTemporal) {
-                contenedorTemporal = document.createElement('div');
-                contenedorTemporal.id = 'pdf-mesa-temp';
-                contenedorTemporal.style.position = 'absolute';
-                contenedorTemporal.style.left = '-9999px';
-                document.body.appendChild(contenedorTemporal);
-            }
-            contenedorTemporal.innerHTML = html;
+            html += `</tbody></table></div>`;
 
             let opciones = { 
-                margin: 0, 
+                margin: 10, 
                 filename: `Operativo_Mesa_${mesa}.pdf`, 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true }, 
-                jsPDF: { unit: 'px', format: [1122, 793], orientation: 'landscape' } 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } 
             };
-            html2pdf().set(opciones).from(contenedorTemporal).save();
+            
+            html2pdf().set(opciones).from(html).save();
         }
 
         function cambiarPantalla() {
