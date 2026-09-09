@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
+    <title>Dashboard ONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -51,20 +51,41 @@
         .dashboard-container { width: min(100%, 1100px); margin: 20px auto; padding: 0 15px; }
 
         .graficos-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 25px; }
-        .grafico-card { background: var(--blanco); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; flex: 1; min-width: 250px; border-top: 5px solid var(--azul-onpe); }
+        .grafico-card { background: var(--blanco); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; flex: 1; min-width: 320px; border-top: 5px solid var(--azul-onpe); }
         .grafico-card.goyita { border-top-color: var(--rojo-onpe); }
         .grafico-card h4 { margin-bottom: 15px; color: var(--azul-onpe); font-size: 16px; }
-        .circulo-progreso { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; background: conic-gradient(var(--color-barra) var(--porcentaje), #e0e0e0 0deg); margin: 0 auto 15px; transition: background 0.5s ease-in-out; }
-        .circulo-progreso::before { content: ""; position: absolute; width: 90px; height: 90px; background-color: var(--blanco); border-radius: 50%; }
-        .circulo-valor { position: relative; font-size: 24px; font-weight: bold; color: var(--texto-oscuro); }
+        
+        .kpi-row { display: flex; justify-content: space-around; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .kpi-item { display: flex; flex-direction: column; align-items: center; }
+        .kpi-item h5 { font-size: 12px; color: var(--texto-claro); margin-bottom: 8px; text-transform: uppercase; }
+        
+        .circulo-progreso { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; background: conic-gradient(var(--color-barra) var(--porcentaje), #e0e0e0 0deg); transition: background 0.5s ease-in-out; }
+        .circulo-progreso::before { content: ""; position: absolute; width: 76px; height: 76px; background-color: var(--blanco); border-radius: 50%; }
+        .circulo-valor { position: relative; font-size: 18px; font-weight: bold; color: var(--texto-oscuro); }
+        
+        /* Efecto interactivo para el KPI de credenciales */
+        .kpi-interactivo { cursor: pointer; transition: transform 0.2s; padding: 5px; border-radius: 8px; border: 1px dashed transparent; }
+        .kpi-interactivo:hover { transform: scale(1.05); border-color: var(--naranja-alerta); background-color: var(--naranja-claro); }
+
         .btn-pdf { background-color: var(--rojo-onpe); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-top: 10px; }
         .btn-pdf-cred { background-color: var(--azul-onpe); margin-top: 20px; }
 
         .btn-acordeon { width: 100%; text-align: left; background: var(--blanco); border: 1px solid #ddd; padding: 15px; font-size: 16px; font-weight: bold; color: var(--azul-onpe); cursor: pointer; border-radius: 8px; margin-bottom: 8px; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-acordeon.main-btn { background: var(--azul-onpe); color: var(--blanco); text-align: center; font-size: 18px; margin-top: 0; margin-bottom: 25px; } 
         .btn-acordeon.ie-btn { background: #e3f2fd; border-left: 5px solid var(--celeste-onpe); margin-left: 10px; width: calc(100% - 10px); }
-        .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; }
+        .btn-acordeon.mesa-btn { background: #f4f6f9; border-left: 5px solid var(--rojo-onpe); margin-left: 20px; width: calc(100% - 20px); font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
         .acordeon-contenido { margin-bottom: 10px; overflow: hidden; transition: max-height 0.3s ease; }
+        
+        /* Modal de Mesas Críticas */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-card { background: var(--blanco); width: 90%; max-width: 500px; max-height: 80vh; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--naranja-alerta); padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-header h3 { color: var(--naranja-alerta); margin: 0; font-size: 18px; }
+        .btn-cerrar { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        .lista-critica { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .mesa-critica-item { display: flex; justify-content: space-between; align-items: center; background: #fff8f0; padding: 12px; border-radius: 8px; border-left: 4px solid var(--rojo-onpe); }
+        .mesa-critica-item.media { border-left-color: var(--naranja-alerta); }
+        .mesa-critica-item.ok { border-left-color: var(--verde-miembro); background: #e8f5e9; }
         
         .carousel-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
         .carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; gap: 15px; padding: 10px 0; scrollbar-width: none; -ms-overflow-style: none; }
@@ -98,10 +119,6 @@
             .top-cards { grid-template-columns: 1fr; }
             .btn-acordeon.ie-btn { margin-left: 0; width: 100%; }
             .btn-acordeon.mesa-btn { margin-left: 10px; width: calc(100% - 10px); }
-            .login-card { padding: 20px; }
-            .left-btn { left: -5px; width: 35px; height: 35px; }
-            .right-btn { right: -5px; width: 35px; height: 35px; }
-            .info-sesion { width: 100%; justify-content: center; margin-bottom: 10px; }
         }
     </style>
 </head>
@@ -124,6 +141,19 @@
         </div>
     </div>
 
+    <!-- MODAL MESAS CRÍTICAS -->
+    <div id="modal-critico" class="modal-overlay hidden" onclick="cerrarModalCritico(event)">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>🚨 Estado Crítico: Credenciales</h3>
+                <button class="btn-cerrar" onclick="document.getElementById('modal-critico').classList.add('hidden')">×</button>
+            </div>
+            <div class="lista-critica" id="contenido-mesas-criticas">
+                <!-- Se inyectan las tarjetas de mesas por JS -->
+            </div>
+        </div>
+    </div>
+
     <div id="dashboard-view" class="hidden">
         <div class="navbar">
             <img src="https://consultaelectoral.onpe.gob.pe/assets/logos/logo-eleccion.svg" alt="ONPE">
@@ -138,26 +168,50 @@
                 <div id="contenedor-acordeon-admin"></div>
 
                 <div class="graficos-container">
-                    <div class="grafico-card">
+                    <div class="grafico-card" id="card-paragsha">
                         <h4>Centro Poblado Paragsha</h4>
-                        <div class="circulo-progreso" id="circulo-paragsha" style="--porcentaje: 0%; --color-barra: var(--celeste-onpe);">
-                            <span class="circulo-valor" id="valor-paragsha">0%</span>
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <h5>Capacitación</h5>
+                                <div class="circulo-progreso" id="circulo-paragsha-cap" style="--porcentaje: 0%; --color-barra: var(--celeste-onpe);">
+                                    <span class="circulo-valor" id="valor-paragsha-cap">0%</span>
+                                </div>
+                                <p id="texto-paragsha-cap" style="font-weight: bold; color: var(--texto-claro); font-size: 12px; margin-top: 5px;">0 / 0</p>
+                            </div>
+                            <div class="kpi-item kpi-interactivo" onclick="abrirModalCritico('SETH')" title="Ver mesas críticas">
+                                <h5>🪪 Credenciales</h5>
+                                <div class="circulo-progreso" id="circulo-paragsha-cred" style="--porcentaje: 0%; --color-barra: var(--naranja-alerta);">
+                                    <span class="circulo-valor" id="valor-paragsha-cred">0%</span>
+                                </div>
+                                <p id="texto-paragsha-cred" style="font-weight: bold; color: var(--texto-claro); font-size: 12px; margin-top: 5px;">0 / 0</p>
+                            </div>
                         </div>
-                        <p id="texto-paragsha" style="font-weight: bold; color: var(--texto-claro);">0 / 0</p>
-                        <button class="btn-pdf" id="btn-pdf-seth" onclick="dispararPDF('SETH')">📄 Generar Avance (Paragsha)</button>
+                        <button class="btn-pdf" onclick="dispararPDF('SETH')">📄 Generar Avance (Paragsha)</button>
                     </div>
 
-                    <div class="grafico-card goyita">
+                    <div class="grafico-card goyita" id="card-resto">
                         <h4>Distrito Simón Bolívar</h4>
-                        <div class="circulo-progreso" id="circulo-resto" style="--porcentaje: 0%; --color-barra: var(--rojo-onpe);">
-                            <span class="circulo-valor" id="valor-resto">0%</span>
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <h5>Capacitación</h5>
+                                <div class="circulo-progreso" id="circulo-resto-cap" style="--porcentaje: 0%; --color-barra: var(--rojo-onpe);">
+                                    <span class="circulo-valor" id="valor-resto-cap">0%</span>
+                                </div>
+                                <p id="texto-resto-cap" style="font-weight: bold; color: var(--texto-claro); font-size: 12px; margin-top: 5px;">0 / 0</p>
+                            </div>
+                            <div class="kpi-item kpi-interactivo" onclick="abrirModalCritico('GOYITA')" title="Ver mesas críticas">
+                                <h5>🪪 Credenciales</h5>
+                                <div class="circulo-progreso" id="circulo-resto-cred" style="--porcentaje: 0%; --color-barra: var(--naranja-alerta);">
+                                    <span class="circulo-valor" id="valor-resto-cred">0%</span>
+                                </div>
+                                <p id="texto-resto-cred" style="font-weight: bold; color: var(--texto-claro); font-size: 12px; margin-top: 5px;">0 / 0</p>
+                            </div>
                         </div>
-                        <p id="texto-resto" style="font-weight: bold; color: var(--texto-claro);">0 / 0</p>
-                        <button class="btn-pdf" id="btn-pdf-goyita" style="background-color: #c00000;" onclick="dispararPDF('GOYITA')">📄 Generar Avance (Distrito)</button>
+                        <button class="btn-pdf" style="background-color: #c00000;" onclick="dispararPDF('GOYITA')">📄 Generar Avance (Distrito)</button>
                     </div>
                 </div>
 
-                <button class="btn-pdf btn-pdf-cred" onclick="generarPDFCredenciales()">🪪 Descargar Historial de Credenciales Completo</button>
+                <button class="btn-pdf btn-pdf-cred" onclick="generarPDFCredenciales()">🪪 Descargar Historial Completo de Credenciales</button>
             </div>
 
             <div id="contenedor-resultados"></div>
@@ -176,7 +230,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxz1PpmF4fxX4eYqADzI4cVGQMTnv93Ye-oLyDiLAyBBh82X8aOtPhij2BOT6QeCmG8/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylDafhrRnmaT27dND_EY3usx6Byd82ZLH7jiS3tLD14E-H4S1SSQ5iUTGCyD3iyOr_9A/exec';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShFcVD-MAHCeuCCteYy-mrnAU7VT9XWMQitmvFt_ZW8F2qssKpCI7upzfr_pJ2hoBZk-5gH4U9BaF-/pub?gid=1997588352&single=true&output=csv';
         const DNI_SETH = '71036931'; 
         const DNI_GOYITA = '70749305'; 
@@ -185,6 +239,7 @@
         let baseDeDatos = []; 
         let usuarioActual = ''; 
         let intervaloReloj;
+        let reporteMesasCriticas = {}; // Guarda datos calculados para acceso rápido
 
         document.addEventListener('DOMContentLoaded', () => {
             const inputBusq = document.getElementById('inputBusqueda');
@@ -234,7 +289,6 @@
                 cerrarSesion();
                 return;
             }
-            
             let min = Math.floor(faltan / 60);
             let sec = faltan % 60;
             document.getElementById('reloj-texto').innerText = `${min < 10 ? '0'+min : min}:${sec < 10 ? '0'+sec : sec}`;
@@ -486,7 +540,13 @@
                 mesas.forEach(mesa => {
                     let idMesa = idIE + '_mesa_' + mesa;
                     htmlAcordeon += `
-                        <button class="btn-acordeon mesa-btn" onclick="toggleAcordeon('${idMesa}', this, '${ie}', '${mesa}')">🗳️ Mesa N° ${mesa} <span style="float:right;">▼</span></button>
+                        <button class="btn-acordeon mesa-btn" id="btn_${idMesa}" onclick="toggleAcordeon('${idMesa}', this, '${ie}', '${mesa}')">
+                            🗳️ Mesa N° ${mesa} 
+                            <div>
+                                <span id="badge_mesa_${mesa}" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #eee; margin-right: 10px;">-</span>
+                                <span>▼</span>
+                            </div>
+                        </button>
                         <div id="${idMesa}" class="acordeon-contenido hidden" style="padding-top:10px;"></div>
                     `;
                 });
@@ -497,8 +557,9 @@
             document.getElementById('contenedor-acordeon-admin').innerHTML = htmlAcordeon;
             document.getElementById('contenedor-resultados').innerHTML = ''; 
             document.getElementById('admin-graficos').classList.remove('hidden');
-            document.getElementById('btn-pdf-seth').style.display = (usuarioActual === 'SETH') ? 'block' : 'none';
-            document.getElementById('btn-pdf-goyita').style.display = (usuarioActual === 'GOYITA') ? 'block' : 'none';
+            
+            document.getElementById('card-paragsha').style.display = (usuarioActual === 'SETH') ? 'block' : 'none';
+            document.getElementById('card-resto').style.display = (usuarioActual === 'GOYITA') ? 'block' : 'none';
 
             actualizarGraficosCirculares();
             cambiarPantalla();
@@ -506,7 +567,7 @@
 
         function toggleAcordeon(id, btnElement, ieBuscada = '', mesaBuscada = '') {
             let panel = document.getElementById(id);
-            let flecha = btnElement.querySelector('span'); 
+            let flecha = btnElement.querySelectorAll('span')[btnElement.querySelectorAll('span').length - 1]; 
 
             if (panel.classList.contains('hidden')) {
                 panel.classList.remove('hidden');
@@ -537,41 +598,131 @@
         }
 
         function actualizarGraficosCirculares() {
-            let sanAndresTotal = 0, sanAndresCap = 0;
-            let restoTotal = 0, restoCap = 0;
+            let s_Total = 0, s_Cap = 0, s_Cred = 0;
+            let r_Total = 0, r_Cap = 0, r_Cred = 0;
+            
+            // Reiniciar reporte crítico local
+            reporteMesasCriticas = { 'SETH': {}, 'GOYITA': {} };
 
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
                 if(col.length >= 8) {
                     const institucion = col[7] ? col[7].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
+                    const mesa = col[0] ? col[0].trim() : '000000';
                     const estaCapacitado = (col[8] && col[8].trim() !== "" && col[8].trim() !== "No Capacitado");
+                    const tieneCredencial = (col[10] && col[10].trim() === "Entregada");
                     
-                    if (institucion.includes("SAN ANDRES")) {
-                        sanAndresTotal++; if(estaCapacitado) sanAndresCap++;
+                    const zona = institucion.includes("SAN ANDRES") ? 'SETH' : 'GOYITA';
+
+                    // Lógica Global
+                    if (zona === 'SETH') {
+                        s_Total++; 
+                        if(estaCapacitado) s_Cap++;
+                        if(tieneCredencial) s_Cred++;
                     } else {
-                        restoTotal++; if(estaCapacitado) restoCap++;
+                        r_Total++; 
+                        if(estaCapacitado) r_Cap++;
+                        if(tieneCredencial) r_Cred++;
                     }
+
+                    // Lógica por Mesa (Para el Modal Crítico y badges del Acordeón)
+                    if (!reporteMesasCriticas[zona][mesa]) {
+                        reporteMesasCriticas[zona][mesa] = { ie: col[7].trim(), total: 0, cred: 0 };
+                    }
+                    reporteMesasCriticas[zona][mesa].total++;
+                    if(tieneCredencial) reporteMesasCriticas[zona][mesa].cred++;
                 }
             });
 
-            const pctSanAndres = sanAndresTotal > 0 ? ((sanAndresCap / sanAndresTotal) * 100).toFixed(1) : 0;
-            const pctResto = restoTotal > 0 ? ((restoCap / restoTotal) * 100).toFixed(1) : 0;
+            // Actualizar vista Paragsha (SETH)
+            const pct_s_Cap = s_Total > 0 ? ((s_Cap / s_Total) * 100).toFixed(1) : 0;
+            const pct_s_Cred = s_Total > 0 ? ((s_Cred / s_Total) * 100).toFixed(1) : 0;
+            document.getElementById('circulo-paragsha-cap').style.setProperty('--porcentaje', `${pct_s_Cap}%`);
+            document.getElementById('valor-paragsha-cap').innerText = `${pct_s_Cap}%`;
+            document.getElementById('texto-paragsha-cap').innerText = `${s_Cap} / ${s_Total}`;
+            
+            document.getElementById('circulo-paragsha-cred').style.setProperty('--porcentaje', `${pct_s_Cred}%`);
+            document.getElementById('valor-paragsha-cred').innerText = `${pct_s_Cred}%`;
+            document.getElementById('texto-paragsha-cred').innerText = `${s_Cred} / ${s_Total}`;
 
-            document.getElementById('circulo-paragsha').style.setProperty('--porcentaje', `${pctSanAndres}%`);
-            document.getElementById('valor-paragsha').innerText = `${pctSanAndres}%`;
-            document.getElementById('texto-paragsha').innerText = `${sanAndresCap} / ${sanAndresTotal}`;
-
-            document.getElementById('circulo-resto').style.setProperty('--porcentaje', `${pctResto}%`);
-            document.getElementById('valor-resto').innerText = `${pctResto}%`;
-            document.getElementById('texto-resto').innerText = `${restoCap} / ${restoTotal}`;
+            // Actualizar vista Resto (GOYITA)
+            const pct_r_Cap = r_Total > 0 ? ((r_Cap / r_Total) * 100).toFixed(1) : 0;
+            const pct_r_Cred = r_Total > 0 ? ((r_Cred / r_Total) * 100).toFixed(1) : 0;
+            document.getElementById('circulo-resto-cap').style.setProperty('--porcentaje', `${pct_r_Cap}%`);
+            document.getElementById('valor-resto-cap').innerText = `${pct_r_Cap}%`;
+            document.getElementById('texto-resto-cap').innerText = `${r_Cap} / ${r_Total}`;
+            
+            document.getElementById('circulo-resto-cred').style.setProperty('--porcentaje', `${pct_r_Cred}%`);
+            document.getElementById('valor-resto-cred').innerText = `${pct_r_Cred}%`;
+            document.getElementById('texto-resto-cred').innerText = `${r_Cred} / ${r_Total}`;
 
             window.metricas = { 
-                sanAndres: { cap: sanAndresCap, total: sanAndresTotal }, 
-                resto: { cap: restoCap, total: restoTotal } 
+                sanAndres: { cap: s_Cap, total: s_Total }, 
+                resto: { cap: r_Cap, total: r_Total } 
             };
+
+            // Inyectar el avance directo en los botones del acordeón (Indicador por Mesa)
+            let datosZona = reporteMesasCriticas[usuarioActual];
+            if(datosZona) {
+                Object.keys(datosZona).forEach(m => {
+                    let badgeMesa = document.getElementById('badge_mesa_' + m);
+                    if(badgeMesa) {
+                        let obj = datosZona[m];
+                        let colorBg = obj.cred === obj.total ? '#e8f5e9' : (obj.cred > 0 ? '#fff3e0' : '#ffebee');
+                        let colorTx = obj.cred === obj.total ? '#2e7d32' : (obj.cred > 0 ? '#e65100' : '#c62828');
+                        badgeMesa.style.background = colorBg;
+                        badgeMesa.style.color = colorTx;
+                        badgeMesa.innerText = `Cred: ${obj.cred}/${obj.total}`;
+                    }
+                });
+            }
         }
 
-        // LÓGICA DE GUARDADO DIVIDIDA (CAPACITACIÓN vs CREDENCIAL)
+        // LÓGICA DEL PANEL CRÍTICO INTERACTIVO
+        function abrirModalCritico(zona) {
+            let contenedor = document.getElementById('contenido-mesas-criticas');
+            contenedor.innerHTML = '';
+            
+            // Array para ordenar
+            let arrayMesas = [];
+            let objZona = reporteMesasCriticas[zona];
+            
+            for(let mesa in objZona) {
+                let m = objZona[mesa];
+                let porcentaje = m.total > 0 ? (m.cred / m.total) * 100 : 0;
+                arrayMesas.push({ mesa: mesa, ie: m.ie, cred: m.cred, total: m.total, pct: porcentaje });
+            }
+
+            // Ordenamos: Menor porcentaje primero (Las más críticas arriba)
+            arrayMesas.sort((a, b) => a.pct - b.pct);
+
+            arrayMesas.forEach(item => {
+                let claseEstado = item.pct === 100 ? 'ok' : (item.pct >= 50 ? 'media' : '');
+                let icono = item.pct === 100 ? '✅' : (item.pct === 0 ? '🚨' : '⚠️');
+                
+                contenedor.innerHTML += `
+                    <div class="mesa-critica-item ${claseEstado}">
+                        <div>
+                            <strong style="font-size: 15px; color: var(--azul-onpe);">Mesa ${item.mesa}</strong>
+                            <div style="font-size: 11px; color: #666;">${item.ie}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: bold; font-size: 14px;">${icono} ${item.cred} / ${item.total}</div>
+                            <div style="font-size: 11px; color: var(--naranja-alerta);">${item.pct.toFixed(0)}% Entregado</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('modal-critico').classList.remove('hidden');
+        }
+
+        function cerrarModalCritico(e) {
+            if (e.target.id === 'modal-critico') {
+                document.getElementById('modal-critico').classList.add('hidden');
+            }
+        }
+
         function guardar(dniTarget, tipo) {
             let cap = "", cred = "", obsInput = "";
             let msj, btn;
@@ -616,7 +767,6 @@
                     
                     credEnvio = colArray[10] || 'Pendiente';
                     
-                    // Actualizar UI de Capacitación
                     let badgeDOM = document.getElementById('badge_' + dniTarget);
                     let obsDOM = document.getElementById('obs_text_' + dniTarget);
                     if (capEnvio && capEnvio !== "No Capacitado" && capEnvio.trim() !== "") {
@@ -635,7 +785,6 @@
                     credEnvio = cred;
                     colArray[10] = credEnvio;
                     
-                    // Actualizar UI de Credencial
                     let badgeCredDOM = document.getElementById('badge_cred_' + dniTarget);
                     if (credEnvio === "Entregada") {
                         badgeCredDOM.className = 'status-badge badge-verde';
@@ -816,35 +965,26 @@
             html2pdf().set(opciones).from(contenedorTemporal).save();
         }
 
-        // NUEVA FUNCIÓN: PDF EXCLUSIVO PARA UNA SOLA MESA
         function generarPDFMesa(mesa, ie) {
             let fechaHoy = new Date().toLocaleDateString('es-PE');
             let html = `<div style="padding: 30px; font-family: Arial, sans-serif; color: #333;">
                 <h2 style="color: #003366; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Historial de Credenciales - Mesa ${mesa}</h2>
                 <p><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
-                    <tr style="background-color: #003366; color: white;">
-                        <th style="padding: 10px; border: 1px solid #ddd;">DNI</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Nombres y Apellidos</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Cargo</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Estado Credencial</th>
-                    </tr>`;
+                <div style="margin-top: 20px;">`; // Sin tablas por restricción
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
                 if (col.length >= 8 && col[0].trim() === mesa) {
                     let cred = col[10] ? col[10].trim() : 'Pendiente';
                     let colorCred = cred === 'Entregada' ? '#2e7d32' : '#e65100';
-                    html += `<tr>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align:center;">${col[1]}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd;">${col[2]} ${col[3]}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align:center;">${col[4]}</td>
-                        <td style="padding: 10px; border: 1px solid #ddd; text-align:center; color: ${colorCred}; font-weight:bold;">${cred}</td>
-                    </tr>`;
+                    html += `<div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                        <strong>${col[2]} ${col[3]}</strong> - DNI: ${col[1]} - ${col[4]}<br>
+                        Estado: <strong style="color: ${colorCred};">${cred}</strong>
+                    </div>`;
                 }
             });
 
-            html += `</table></div>`;
+            html += `</div></div>`;
 
             let contenedorTemporal = document.getElementById('pdf-mesa-temp');
             if (!contenedorTemporal) {
