@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONPE - Simón Bolívar</title>
+    <title>DONPE - Simón Bolívar</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -147,9 +147,7 @@
                 <h3 id="titulo-modal-critico">🚨 Estado Crítico</h3>
                 <button class="btn-cerrar" onclick="document.getElementById('modal-critico').classList.add('hidden')">×</button>
             </div>
-            <div class="lista-critica" id="contenido-mesas-criticas">
-                <!-- Inyectado por JS -->
-            </div>
+            <div class="lista-critica" id="contenido-mesas-criticas"></div>
         </div>
     </div>
 
@@ -210,7 +208,7 @@
                     </div>
                 </div>
 
-                <button class="btn-pdf btn-pdf-cred" onclick="generarPDFCredenciales()">🪪 Descargar Historial Completo de Credenciales</button>
+                <button class="btn-pdf btn-pdf-cred" onclick="generarPDFCredenciales()">🪪 Descargar Padrón Operativo (Credenciales)</button>
             </div>
 
             <div id="contenedor-resultados"></div>
@@ -958,38 +956,68 @@
         }
 
         function generarPDFCredenciales() {
+            const URL_BANNER = 'credencial.jpg'; 
+            
             let fechaHoy = new Date().toLocaleDateString('es-PE');
-            let html = `<div style="padding: 40px; font-family: Arial, sans-serif; color: #333;">
-                <h2 style="color: #003366; text-align: center; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Reporte Consolidado: Entrega de Credenciales</h2>
-                <p style="text-align: right; font-size: 14px; color: #666;">Distrito Simón Bolívar | Fecha: ${fechaHoy}</p>`;
+            let zonaNombre = usuarioActual === 'SETH' ? 'Centro Poblado Paragsha' : 'Distrito Simón Bolívar';
+            
+            let html = `<div style="padding: 20px; font-family: Arial, sans-serif; color: #333;">
+                <img src="${URL_BANNER}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 15px;">
+                <h2 style="color: #003366; text-align: center; font-size: 18px; margin-bottom: 5px;">Padrón Operativo: ${zonaNombre}</h2>
+                <p style="text-align: right; font-size: 12px; color: #666; margin-bottom: 20px; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Fecha de emisión: ${fechaHoy}</p>`;
 
-            let datosAgrupados = {};
+            let padron = {};
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
                 if (col.length >= 8) {
                     let ie = col[7] ? col[7].trim() : 'SIN LOCAL';
                     let mesa = col[0] ? col[0].trim() : '000000';
-                    let cred = col[10] ? col[10].trim() : 'Pendiente'; 
 
                     if (usuarioActual === 'SETH' && !ie.toUpperCase().includes("SAN ANDRES")) return;
                     if (usuarioActual === 'GOYITA' && ie.toUpperCase().includes("SAN ANDRES")) return;
 
-                    if (!datosAgrupados[ie]) datosAgrupados[ie] = {};
-                    if (!datosAgrupados[ie][mesa]) datosAgrupados[ie][mesa] = { entregadas: 0, pendientes: 0 };
+                    if (!padron[ie]) padron[ie] = {};
+                    if (!padron[ie][mesa]) padron[ie][mesa] = [];
                     
-                    if (cred === 'Entregada') datosAgrupados[ie][mesa].entregadas++;
-                    else datosAgrupados[ie][mesa].pendientes++;
+                    padron[ie][mesa].push({
+                        nombres: (col[2] || '') + ' ' + (col[3] || ''),
+                        cargo: col[4] || 'Sin Cargo',
+                        celular: col[5] && col[5].trim() !== "" ? col[5] : 'Sin número',
+                        cred: col[10] ? col[10].trim() : 'Pendiente'
+                    });
                 }
             });
 
-            Object.keys(datosAgrupados).sort().forEach(ie => {
-                html += `<h3 style="color: #4a90e2; margin-top: 25px; font-size: 18px;">🏫 ${ie}</h3>`;
-                Object.keys(datosAgrupados[ie]).sort().forEach(mesa => {
-                    let stats = datosAgrupados[ie][mesa];
-                    html += `<div style="margin-left: 20px; font-size: 15px; border-bottom: 1px solid #eee; padding: 8px 0;">
-                        🗳️ Mesa N° ${mesa}: <strong style="color: #2e7d32;">${stats.entregadas} Entregadas</strong> / <span style="color: #e65100;">${stats.pendientes} Pendientes</span>
-                    </div>`;
+            Object.keys(padron).sort().forEach(ie => {
+                html += `<div style="page-break-inside: avoid; margin-top: 15px;">
+                            <h3 style="background: var(--azul-onpe); color: white; margin: 0; padding: 10px; font-size: 15px; border-radius: 6px 6px 0 0;">🏫 ${ie}</h3>
+                         </div>`;
+                
+                Object.keys(padron[ie]).sort().forEach(mesa => {
+                    html += `<div style="page-break-inside: avoid; border: 1px solid #ddd; border-top: none; margin-bottom: 15px; border-radius: 0 0 6px 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <div style="background: #f4f6f9; color: var(--azul-onpe); font-size: 14px; font-weight: bold; padding: 8px 10px; border-left: 4px solid var(--rojo-onpe);">🗳️ Mesa N° ${mesa}</div>`;
+                    
+                    padron[ie][mesa].forEach(miembro => {
+                        let colorCred = miembro.cred === 'Entregada' ? '#2e7d32' : '#e65100';
+                        let iconoCred = miembro.cred === 'Entregada' ? '✅' : '⚠️';
+                        
+                        html += `
+                        <div style="display: flex; border-top: 1px solid #eee; padding: 8px 10px; align-items: center; background: #fff;">
+                            <div style="width: 45%; font-size: 12px; line-height: 1.3;">
+                                <strong style="color: #333;">${miembro.nombres}</strong><br>
+                                <span style="color: #666; font-size: 10px;">${miembro.cargo}</span>
+                            </div>
+                            <div style="width: 25%; font-size: 12px; text-align: center; color: #555;">
+                                📱 ${miembro.celular}
+                            </div>
+                            <div style="width: 30%; font-size: 12px; text-align: right; font-weight: bold; color: ${colorCred};">
+                                ${iconoCred} ${miembro.cred}
+                            </div>
+                        </div>`;
+                    });
+                    
+                    html += `</div>`; 
                 });
             });
 
@@ -1005,25 +1033,44 @@
             }
             contenedorTemporal.innerHTML = html;
 
-            let opciones = { margin: 15, filename: `Historial_Credenciales_${fechaHoy}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            let opciones = { 
+                margin: 10, 
+                filename: `Padron_Credenciales_${fechaHoy}.pdf`, 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2, useCORS: true }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
             html2pdf().set(opciones).from(contenedorTemporal).save();
         }
 
         function generarPDFMesa(mesa, ie) {
             let fechaHoy = new Date().toLocaleDateString('es-PE');
             let html = `<div style="padding: 30px; font-family: Arial, sans-serif; color: #333;">
-                <h2 style="color: #003366; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Historial de Credenciales - Mesa ${mesa}</h2>
-                <p><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
-                <div style="margin-top: 20px;">`; 
+                <h2 style="color: #003366; border-bottom: 2px solid #e30613; padding-bottom: 10px;">Historial Operativo - Mesa ${mesa}</h2>
+                <p style="font-size: 14px;"><strong>Local:</strong> ${ie}<br><strong>Fecha de Emisión:</strong> ${fechaHoy}</p>
+                <div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); page-break-inside: avoid;">
+                    <div style="background: #f4f6f9; color: var(--azul-onpe); font-size: 14px; font-weight: bold; padding: 8px 10px; border-bottom: 1px solid #ddd; border-radius: 6px 6px 0 0;">🗳️ Detalles de la Mesa N° ${mesa}</div>`; 
             
             baseDeDatos.forEach(fila => {
                 const col = fila.split(',');
                 if (col.length >= 8 && col[0].trim() === mesa) {
                     let cred = col[10] ? col[10].trim() : 'Pendiente';
                     let colorCred = cred === 'Entregada' ? '#2e7d32' : '#e65100';
-                    html += `<div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                        <strong>${col[2]} ${col[3]}</strong> - DNI: ${col[1]} - ${col[4]}<br>
-                        Estado: <strong style="color: ${colorCred};">${cred}</strong>
+                    let iconoCred = cred === 'Entregada' ? '✅' : '⚠️';
+                    
+                    html += `
+                    <div style="display: flex; border-bottom: 1px solid #eee; padding: 10px; align-items: center; background: #fff;">
+                        <div style="width: 45%; font-size: 12px; line-height: 1.3;">
+                            <strong style="color: #333;">${col[2]} ${col[3]}</strong><br>
+                            <span style="color: #666; font-size: 10px;">${col[4]} - DNI: ${col[1]}</span>
+                        </div>
+                        <div style="width: 25%; font-size: 12px; text-align: center; color: #555;">
+                            📱 ${col[5] && col[5].trim() !== "" ? col[5] : 'Sin número'}
+                        </div>
+                        <div style="width: 30%; font-size: 12px; text-align: right; font-weight: bold; color: ${colorCred};">
+                            ${iconoCred} ${cred}
+                        </div>
                     </div>`;
                 }
             });
@@ -1040,7 +1087,7 @@
             }
             contenedorTemporal.innerHTML = html;
 
-            let opciones = { margin: 15, filename: `Entrega_Mesa_${mesa}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            let opciones = { margin: 15, filename: `Operativo_Mesa_${mesa}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
             html2pdf().set(opciones).from(contenedorTemporal).save();
         }
 
