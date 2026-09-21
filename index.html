@@ -209,6 +209,7 @@
                 </div>
 
                 <button class="btn-pdf btn-pdf-cred" onclick="generarPDFCredenciales()">🪪 Descargar Padrón Operativo (Credenciales)</button>
+                <button class="btn-pdf" style="background-color: #217346; margin-top: 10px;" onclick="descargarExcelPadron()">📊 Descargar Data Completa en Excel</button>
             </div>
 
             <div id="contenedor-resultados"></div>
@@ -1070,6 +1071,46 @@
             };
             
             html2pdf().set(opciones).from(html).save();
+        }
+
+        // NUEVA FUNCIÓN PARA DESCARGAR EL PADRÓN EN EXCEL (.CSV)
+        function descargarExcelPadron() {
+            let csvContent = "\uFEFF"; // Fuerza UTF-8 en Excel
+            csvContent += "Local,Mesa,DNI,Nombres,Cargo,Celular,Estado Capacitación,Estado Credencial\n";
+
+            let zonaNombre = usuarioActual === 'SETH' ? 'Paragsha' : 'Bolivar';
+
+            baseDeDatos.forEach(fila => {
+                const col = fila.split(',');
+                if (col.length >= 8) {
+                    let ie = col[7] ? col[7].trim() : 'SIN LOCAL';
+                    let mesa = col[0] ? col[0].trim() : '000000';
+
+                    if (usuarioActual === 'SETH' && !ie.toUpperCase().includes("SAN ANDRES")) return;
+                    if (usuarioActual === 'GOYITA' && ie.toUpperCase().includes("SAN ANDRES")) return;
+
+                    let dni = col[1] ? col[1].trim() : '';
+                    let nombres = (col[2] || '') + ' ' + (col[3] || '');
+                    let cargo = col[4] ? col[4].trim() : 'Sin Cargo';
+                    let celular = col[5] && col[5].trim() !== "" ? col[5].trim() : 'Sin número';
+                    
+                    let capacitacion = col[8] && col[8].trim() !== "" ? col[8].trim() : 'Sin registrar';
+                    let credencial = col[10] ? col[10].trim() : 'Pendiente';
+
+                    csvContent += `"${ie}","${mesa}","${dni}","${nombres}","${cargo}","${celular}","${capacitacion}","${credencial}"\n`;
+                }
+            });
+
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let link = document.createElement("a");
+            let fechaHoy = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Data_Operativa_${zonaNombre}_${fechaHoy}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function cambiarPantalla() {
